@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
 import '../../widgets/drawer.dart';
 import '../../models/current.dart';
 
@@ -11,6 +13,11 @@ class StaffInfor extends StatefulWidget {
 }
 
 class _StaffInforState extends State<StaffInfor> {
+  String _formatNumber(int number) {
+    final formatter = NumberFormat('#,###', 'vi_VN');
+    return formatter.format(number);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,23 +25,24 @@ class _StaffInforState extends State<StaffInfor> {
       body: Stack(
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height - 50,
-            child: SingleChildScrollView(
-              child: Center(
+            height: MediaQuery.of(context).size.height - 30,
+            child:  Center(
+                
                 child: Column(
                   children: [
                     const SizedBox(
-                      height: 20,
+                      height: 60,
                     ),
                     Text(
-                      shipper.role!,
+                      shipper.account!.role ?? "Chưa có thông tin",
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     CircleAvatar(
+                      radius: 100,
                       backgroundImage: imageBytes != null
                           ? MemoryImage(imageBytes!)
-                          : const AssetImage("lib/client/assets/avt.jpg")
+                          : const AssetImage("lib/delivery/assets/avt.jpg")
                               as ImageProvider,
                     ),
                     const SizedBox(
@@ -42,10 +50,11 @@ class _StaffInforState extends State<StaffInfor> {
                     ),
                     Container(
                       width: MediaQuery.of(context).size.width - 80,
-                      height: MediaQuery.of(context).size.height - 320,
+                      height: MediaQuery.of(context).size.height - 360,
                       decoration: BoxDecoration(
                         border: Border.all(width: 1, color: Colors.grey),
                         borderRadius: BorderRadius.circular(10),
+                        color:Colors.white
                       ),
                       child: SingleChildScrollView(
                         child: Column(
@@ -81,13 +90,14 @@ class _StaffInforState extends State<StaffInfor> {
                             ),
                             CardInfo(
                                 title: "Số điện thoại",
-                                info: shipper.phoneNumber!),
+                                info: shipper.account!.phoneNumber!),
                             const SizedBox(
                               height: 20,
                             ),
                             CardInfo(
                               title: "Email",
-                              info: shipper.email ?? "Chưa có thông tin",
+                              info:
+                                  shipper.account!.email ?? "Chưa có thông tin",
                             ),
                             const SizedBox(
                               height: 20,
@@ -122,14 +132,9 @@ class _StaffInforState extends State<StaffInfor> {
                               height: 20,
                             ),
                             CardInfo(
-                                title: "Ngân hàng",
-                                info: shipper.bank.toString()),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                                title: "Số tài khoản",
-                                info: shipper.bin.toString()),
+                                title: "Lương cơ bản",
+                                info: _formatNumber(shipper.salary ?? 0) +
+                                    " VNĐ"),
                             const SizedBox(
                               height: 20,
                             ),
@@ -143,10 +148,9 @@ class _StaffInforState extends State<StaffInfor> {
                   ],
                 ),
               ),
-            ),
           ),
           Positioned(
-            top: 20,
+            top: 40,
             right: 20,
             child: Builder(
               builder: (context) {

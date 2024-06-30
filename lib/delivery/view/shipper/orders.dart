@@ -1,8 +1,12 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:logistics_app/delivery/bloc/load.dart';
 import 'package:logistics_app/delivery/bloc/orders_operation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:logistics_app/delivery/bloc/staff_shipper_api.dart';
 import 'package:logistics_app/delivery/models/current.dart';
-import 'package:logistics_app/delivery/bloc/shipment_api.dart';
 import 'package:logistics_app/delivery/widgets/ggmap_direction.dart';
 import '../../widgets/drawer.dart';
 import '../../models/order.dart';
@@ -24,9 +28,7 @@ class _OrderListState extends State<OrderList> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-
     filteredOrders.addAll(orders);
   }
 
@@ -60,141 +62,145 @@ class _OrderListState extends State<OrderList> {
       body: !isCollapsed
           ? Stack(
               children: [
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.white,
-                    ),
-                    child: Center(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 60),
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              height: MediaQuery.of(context).size.height - 80,
-                              width: MediaQuery.of(context).size.width - 40,
-                              decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(20)),
-                              child: Center(
-                                child: Column(
-                                  children: [
-                                    const Text(
-                                      "Tất cả",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20),
-                                    ),
-                                    const Divider(
-                                      height: 2,
-                                    ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    Container(
-                                      alignment: Alignment.centerLeft,
-                                      width: MediaQuery.of(context).size.width -
-                                          80,
-                                      padding: const EdgeInsets.only(
-                                          left: 10, right: 10),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: TextField(
-                                        textAlign: TextAlign.left,
-                                        controller: searchController,
-                                        onChanged: (value) {
-                                          if (value.isEmpty) {
-                                            setState(() {
-                                              filteredOrders = orders;
-                                            });
-                                          } else {
-                                            setState(() {
-                                              searchId(value);
-                                            });
+                SingleChildScrollView(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 80),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          width: MediaQuery.of(context).size.width - 40,
+                          decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(20)),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                const Text(
+                                  "Tất cả",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20),
+                                ),
+                                const Divider(
+                                  height: 2,
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  width: MediaQuery.of(context).size.width - 80,
+                                  padding: const EdgeInsets.only(
+                                      left: 10, right: 10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: TextField(
+                                    textAlign: TextAlign.left,
+                                    controller: searchController,
+                                    onChanged: (value) {
+                                      if (value.isEmpty) {
+                                        setState(() {
+                                          filteredOrders = orders;
+                                        });
+                                      } else {
+                                        setState(() {
+                                          searchId(value);
+                                        });
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: 'Tìm kiếm theo mã đơn hàng',
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              vertical: 15),
+                                      suffixIcon: IconButton(
+                                        onPressed: () async {
+                                          final qrResult = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    QRViewExample()),
+                                          );
+
+                                          if (qrResult != null) {
+                                            updateSearch(qrResult);
+                                            searchId(qrResult);
                                           }
                                         },
-                                        decoration: InputDecoration(
-                                          hintText: 'Tìm kiếm theo mã đơn hàng',
-                                          border: InputBorder.none,
-                                          enabledBorder: InputBorder.none,
-                                          focusedBorder: InputBorder.none,
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  vertical: 15),
-                                          suffixIcon: IconButton(
-                                            onPressed: () async {
-                                              final qrResult =
-                                                  await Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        QRViewExample()),
-                                              );
-
-                                              if (qrResult != null) {
-                                                updateSearch(qrResult);
-                                                searchId(qrResult);
-                                              }
-                                            },
-                                            icon: const Icon(
-                                              Icons.camera_alt_outlined,
-                                              size: 20,
-                                            ),
-                                          ),
+                                        icon: const Icon(
+                                          Icons.camera_alt_outlined,
+                                          size: 20,
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(
-                                      height: 20,
-                                    ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      height:
-                                          MediaQuery.of(context).size.height -
-                                              250,
-                                      child: filteredOrders.isEmpty
-                                          ? const Text("Danh sách trống")
-                                          : ListView.builder(
-                                              padding: EdgeInsets.zero,
-                                              itemCount: filteredOrders.length,
-                                              shrinkWrap: true,
-                                              itemBuilder: (context, index) {
-                                                return Column(
-                                                  children: [
-                                                    const SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    OrderCard(
-                                                      order:
-                                                          filteredOrders[index],
-                                                      func: chooseAPoint,
-                                                      searchId: searchId,
-                                                    )
-                                                  ],
-                                                );
-                                              },
-                                            ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: filteredOrders.isEmpty
+                                      ? const Column(
+                                          children: [
+                                            SizedBox(height: 10),
+                                            Text("Danh sách trống"),
+                                          ],
+                                        )
+                                      : ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxHeight: MediaQuery.of(context)
+                                                    .size
+                                                    .height -
+                                                250,
+                                          ),
+                                          child: ListView.builder(
+                                            padding: EdgeInsets.zero,
+                                            itemCount: filteredOrders.length,
+                                            shrinkWrap: true,
+                                            physics: BouncingScrollPhysics(),
+                                            itemBuilder: (context, index) {
+                                              return Column(
+                                                children: [
+                                                  Container(
+                                                    height: 10,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width -
+                                                            60,
+                                                  ),
+                                                  OrderCard(
+                                                    order:
+                                                        filteredOrders[index],
+                                                    func: chooseAPoint,
+                                                    searchId: searchId,
+                                                  )
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                   ),
                 ),
                 Positioned(
-                  top: 20,
+                  top: 40,
                   right: 20,
                   child: Builder(
                     builder: (context) {
@@ -316,7 +322,7 @@ class _OrderCardState extends State<OrderCard> {
       ));
       setState(() {
         if (rs['error'] == "No error")
-          fee = rs["data"];
+          fee = rs["data"].toString();
         else
           print("Không tính toán được");
       });
@@ -360,7 +366,9 @@ class _OrderCardState extends State<OrderCard> {
                                     fontSize: 15,
                                   ),
                                 ),
-                                Expanded(child: Container(),),
+                                Expanded(
+                                  child: Container(),
+                                ),
                                 Container(
                                   height: 30,
                                   width: 60,
@@ -402,7 +410,9 @@ class _OrderCardState extends State<OrderCard> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15),
                                 ),
-                                Expanded(child: Container(),),
+                                Expanded(
+                                  child: Container(),
+                                ),
                                 Container(
                                   height: 30,
                                   width: 67,
@@ -443,7 +453,9 @@ class _OrderCardState extends State<OrderCard> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15),
                                 ),
-                                Expanded(child: Container(),),
+                                Expanded(
+                                  child: Container(),
+                                ),
                                 Container(
                                   height: 30,
                                   width: 60,
@@ -485,7 +497,9 @@ class _OrderCardState extends State<OrderCard> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15),
                                 ),
-                                Expanded(child: Container(),),
+                                Expanded(
+                                  child: Container(),
+                                ),
                                 Container(
                                   height: 30,
                                   width: 60,
@@ -837,65 +851,441 @@ class _OrderCardState extends State<OrderCard> {
     );
   }
 
-  Future<bool> comfirm(Order order, bool finishedOrder) async {
-    final result = await showDialog<bool>(
+  void showSendImages(Order order) {
+    showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Thông báo',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.grey[200],
-          actions: <Widget>[
-            Column(
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Xác nhận ${finishedOrder ? "hoàn thành!" : "tiếp nhận đơn hàng!"}",
-                  style: const TextStyle(fontSize: 15),
+                const Text(
+                  'Ảnh nhận hàng',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.grey[200]),
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context, false);
-                        },
-                        child: const Text("Hủy bỏ"),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.red),
-                      child: TextButton(
-                        style: const ButtonStyle(),
-                        onPressed: () {
-                          Navigator.pop(context, true);
-                        },
-                        child: const Text(
-                          "Xác nhận",
-                          style: TextStyle(color: Colors.white),
+                order.sendImgs!.isEmpty
+                    ? const Text('Danh sách trống')
+                    : Container(
+                        height: 250,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: order.sendImgs!.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 20.0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(context,
+                                      MaterialPageRoute(builder: (_) {
+                                    return Scaffold(
+                                      appBar: AppBar(
+                                        title: Text(
+                                          'Ảnh gửi hàng',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        backgroundColor: Colors.black,
+                                        iconTheme:
+                                            IconThemeData(color: Colors.grey),
+                                      ),
+                                      backgroundColor:
+                                          const Color.fromARGB(255, 27, 27, 27),
+                                      body: Center(
+                                        child: Image.memory(
+                                          order.sendImgs![index],
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                    );
+                                  }));
+                                },
+                                child: Image.memory(
+                                  order.sendImgs![index],
+                                  fit: BoxFit.contain,
+                                  width: 150,
+                                  height: 150,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
+                const Text(
+                  'Ảnh ký gửi hàng',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                order.sendSig == null
+                    ? const Text('Không có chữ ký')
+                    : Container(
+                        height: 100,
+                        width: 75,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) {
+                              return Scaffold(
+                                appBar: AppBar(
+                                  title: Text(
+                                    'Ảnh ký gửi hàng',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: Colors.black,
+                                  iconTheme: IconThemeData(color: Colors.grey),
+                                ),
+                                backgroundColor:
+                                    const Color.fromARGB(255, 27, 27, 27),
+                                body: Center(
+                                  child: Image.memory(
+                                    order.sendSig!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              );
+                            }));
+                          },
+                          child: Image.memory(
+                            order.sendSig!,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Đóng'),
                     ),
                   ],
-                )
+                ),
               ],
             ),
-          ],
+          ),
         );
       },
     );
+  }
 
-    return result ?? false; // Default to false if result is null
+  void comfirm(Order order) async {
+    List<Uint8List> images = [];
+    List<File> files = [];
+    Uint8List? signature;
+    File? file;
+    bool clicked = false;
+    bool imagesBound = false;
+    bool signatBound = false;
+    bool loading = false;
+
+    Future<void> pickImage(bool isSignature, StateSetter setState) async {
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
+      if (pickedFile != null) {
+        final Uint8List image = await pickedFile.readAsBytes();
+        if (isSignature) {
+          setState(() {
+            signature = image;
+            file = File(pickedFile.path);
+          });
+        } else {
+          setState(() {
+            images.add(image);
+            files.add(File(pickedFile.path));
+          });
+        }
+      }
+    }
+
+    void removeImage(int index) {
+      setState(() {
+        images.removeAt(index);
+      });
+      Navigator.pop(context);
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Dialog(
+              child: Container(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Xác nhận đơn hàng',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'Ảnh nhận hàng',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
+                        images.length < 3
+                            ? InkWell(
+                                onTap: () {
+                                  pickImage(false, setState);
+                                },
+                                child: Container(
+                                  height: 100,
+                                  width: 75,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                  ),
+                                  child: Center(
+                                    child: Icon(Icons.add),
+                                  ),
+                                ),
+                              )
+                            : Container(),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: SizedBox(
+                            height: 100,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: images.length,
+                              itemBuilder: (context, index) {
+                                return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) {
+                                            return Scaffold(
+                                              appBar: AppBar(
+                                                title: Text(
+                                                  'Ảnh gửi hàng',
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                                backgroundColor: Colors.black,
+                                                iconTheme: IconThemeData(
+                                                    color: Colors.grey),
+                                              ),
+                                              backgroundColor:
+                                                  const Color.fromARGB(
+                                                      255, 27, 27, 27),
+                                              body: Center(
+                                                child: Image.memory(
+                                                  images[index],
+                                                  fit: BoxFit.contain,
+                                                ),
+                                              ),
+                                              floatingActionButton: TextButton(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    removeImage(index);
+                                                  });
+                                                },
+                                                child: const Text("Xoá ảnh",
+                                                    style: TextStyle(
+                                                        color: Colors.red,
+                                                        fontSize: 20)),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    },
+                                    child: Image.memory(
+                                      images[index],
+                                      fit: BoxFit.contain,
+                                      width: 150,
+                                      height: 150,
+                                    ));
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    clicked == true && images.isEmpty
+                        ? const Text("Vui lòng chọn ảnh",
+                            style: TextStyle(color: Colors.red))
+                        : Container(),
+                    imagesBound
+                        ? const Text("Vượt quá dung lượng cho phép",
+                            style: TextStyle(color: Colors.red))
+                        : Container(),
+                    SizedBox(height: 10),
+                    Text(
+                      'Ảnh ký nhận',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    SizedBox(height: 10),
+                    InkWell(
+                      onTap: () async {
+                        await pickImage(true, setState);
+                      },
+                      child: signature == null
+                          ? Container(
+                              height: 75,
+                              width: 125,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                              ),
+                              child: Center(
+                                child: Icon(Icons.add),
+                              ),
+                            )
+                          : Container(
+                              height: 75,
+                              width: 125,
+                              child: Image.memory(
+                                signature!,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                    ),
+                    clicked == true && signature == null
+                        ? const Text("Vui lòng chọn ảnh",
+                            style: TextStyle(color: Colors.red))
+                        : Container(),
+                    signatBound
+                        ? const Text("Vượt quá dung lượng cho phép",
+                            style: TextStyle(color: Colors.red))
+                        : Container(),
+                    SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text('Quay lại'),
+                        ),
+                        SizedBox(width: 10),
+                        loading
+                            ? CircularProgressIndicator()
+                            : TextButton(
+                                style: ButtonStyle(
+                                    backgroundColor:
+                                        WidgetStatePropertyAll(Colors.red)),
+                                onPressed: () async {
+                                  setState(() {
+                                    loading = true;
+                                  });
+                                  if (signature == null || images.isEmpty) {
+                                    setState(() {
+                                      clicked = true;
+                                      imagesBound = false;
+                                      signatBound = false;
+                                    });
+                                  } else {
+                                    var sign =
+                                        await ordersOperation.updateSignature(
+                                            order.orderId!,
+                                            order.id!.toString(),
+                                            UploadSignature(file: file!));
+                                    var imag =
+                                        await ordersOperation.updateImages(
+                                            order.orderId!,
+                                            order.id!.toString(),
+                                            UploadImages(files: files));
+                                    print(sign);
+                                    print(imag);
+                                    print(sign["message"]);
+                                    print(imag["message"]);
+                                    setState(() {
+                                      if (sign["message"] ==
+                                          "Reached max size") {
+                                        signatBound = true;
+                                      } else {
+                                        signatBound = false;
+                                      }
+                                      if (imag["message"] ==
+                                              "Reached max size" ||
+                                          imag["message"] ==
+                                              "Quá số lượng ảnh cho phép. Số lượng ảnh cho phép tối đa là 3 ảnh.") {
+                                        imagesBound = true;
+                                      } else {
+                                        imagesBound = false;
+                                      }
+                                    });
+                                    if (sign["error"] == false &&
+                                        imag["error"] == false) {
+                                      ConfirmingCompletedTaskInfo info =
+                                          ConfirmingCompletedTaskInfo(
+                                              id: widget.order.id!);
+                                      await shippersOperation
+                                          .confirmCompletedTask(info);
+                                      orders.removeWhere((order) =>
+                                          order.orderId ==
+                                          widget.order.orderId);
+
+                                      loadHistory();
+
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: Colors.green,
+                                          content: Text(
+                                              'Xác nhận đơn hàng thành công'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  setState(() {
+                                    loading = false;
+                                  });
+                                },
+                                child: Text(
+                                  'Xác nhận',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  List<String> addressConvert(Order order) {
+    String rs = "";
+    List<String> rsList = [];
+    if (order.detailSource != "") rs += (order.detailSource ?? "");
+    if (order.wardSource != "")
+      rs += (rs != "" ? ", " : "") + (order.wardSource ?? "");
+    if (order.districtSource != "")
+      rs += (rs != "" ? ", " : "") + (order.districtSource ?? "");
+    if (order.provinceSource != "")
+      rs += (rs != "" ? ", " : "") + (order.provinceSource ?? "");
+    rsList.add(rs);
+
+    rs = "";
+    if (order.detailDest != "") rs += (order.detailDest ?? "");
+    if (order.wardDest != "")
+      rs += (rs != "" ? ", " : "") + (order.wardDest ?? "");
+    if (order.districtDest != "")
+      rs += (rs != "" ? ", " : "") + (order.districtDest ?? "");
+    if (order.provinceDest != "")
+      rs += (rs != "" ? ", " : "") + (order.provinceDest ?? "");
+    rsList.add(rs);
+
+    return rsList;
   }
 
   @override
@@ -927,10 +1317,10 @@ class _OrderCardState extends State<OrderCard> {
           Row(
             children: [
               const Text(
-                "Vĩ độ bắt đầu: ",
+                "Người nhận: ",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
-              Text(widget.order.latSource.toString())
+              Text(widget.order.nameReceiver ?? "Chưa có thông tin")
             ],
           ),
           const SizedBox(
@@ -939,34 +1329,33 @@ class _OrderCardState extends State<OrderCard> {
           Row(
             children: [
               const Text(
-                "Kinh độ bắt đầu: ",
+                "SĐT: ",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
-              Text(widget.order.longSource.toString())
+              Expanded(
+                child: Text(
+                  widget.order.phoneNumberReceiver ?? "Chưa có thông tin",
+                  softWrap: true,
+                ),
+              ),
             ],
           ),
           const SizedBox(
             height: 10,
           ),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Vĩ độ đích: ",
+                "Địa chỉ: ",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
-              Text(widget.order.latDestination.toString())
-            ],
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          Row(
-            children: [
-              const Text(
-                "Kinh độ đích: ",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              Expanded(
+                child: Text(
+                  addressConvert(widget.order)[1],
+                  softWrap: true,
+                ),
               ),
-              Text(widget.order.longDestination.toString())
             ],
           ),
           const SizedBox(
@@ -980,11 +1369,11 @@ class _OrderCardState extends State<OrderCard> {
             children: [
               TextButton(
                 onPressed: () {
-                  showDetail(widget.order);
+                  showSendImages(widget.order);
                 },
                 child: const Text(
-                  'Chi tiết',
-                  style: TextStyle(color: Colors.black),
+                  'Xem ảnh',
+                  style: TextStyle(color: Colors.pink),
                 ),
               ),
               Container(
@@ -993,15 +1382,11 @@ class _OrderCardState extends State<OrderCard> {
                 color: Colors.grey,
               ),
               TextButton(
-                onPressed: () async {
-                  bool res = await comfirm(widget.order, false);
-                  if (res) {
-                    shipmentsOperation.undertake(UndertakingShipmentInfo(
-                        shipmentId: widget.order.id.toString()));
-                  }
+                onPressed: () {
+                  showDetail(widget.order);
                 },
                 child: const Text(
-                  'Tiếp nhận',
+                  'Chi tiết',
                   style: TextStyle(color: Colors.green),
                 ),
               ),
@@ -1011,18 +1396,8 @@ class _OrderCardState extends State<OrderCard> {
                 color: Colors.grey,
               ),
               TextButton(
-                onPressed: () async {
-                  bool res = await comfirm(widget.order, true);
-                  if (res) {
-                    shippersOperation.confirmCompletedTask(
-                      ConfirmingCompletedTaskInfo(id: widget.order.id!),
-                    );
-                    setState(() {
-                      orders.removeWhere(
-                          (order) => order.orderId == widget.order.orderId);
-                    });
-                    widget.searchId("");
-                  }
+                onPressed: () {
+                  comfirm(widget.order);
                 },
                 child: const Text(
                   'Hoàn thành',

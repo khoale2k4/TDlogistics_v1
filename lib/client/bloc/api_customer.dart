@@ -93,7 +93,8 @@ class CustomerOperation {
       );
       print("Payload: ");
       print(payload.toJson());
-      final data = json.decode(response.body);
+    final decodedResponse = utf8.decode(response.bodyBytes);
+    final data = json.decode(decodedResponse);
       return {'error': "No error", 'message': data['message'], 'data': data['data']};
     } catch (error) {
       print("Error updating customer information: $error");

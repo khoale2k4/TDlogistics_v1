@@ -3,6 +3,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:logistics_app/delivery/models/order.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class GGMapDirection extends StatefulWidget {
   final Order order;
@@ -44,16 +46,22 @@ class _GGMapDirectionState extends State<GGMapDirection> {
     String rs = "";
     List<String> rsList = [];
     if (order.detailSource != "") rs += (order.detailSource ?? "");
-    if (order.wardSource != "") rs += (rs != ""?", ":"") + (order.wardSource ?? "");
-    if (order.districtSource != "") rs += (rs != ""?", ":"") + (order.districtSource ?? "");
-    if (order.provinceSource != "") rs += (rs != ""?", ":"") + (order.provinceSource ?? "");
+    if (order.wardSource != "")
+      rs += (rs != "" ? ", " : "") + (order.wardSource ?? "");
+    if (order.districtSource != "")
+      rs += (rs != "" ? ", " : "") + (order.districtSource ?? "");
+    if (order.provinceSource != "")
+      rs += (rs != "" ? ", " : "") + (order.provinceSource ?? "");
     rsList.add(rs);
 
     rs = "";
     if (order.detailDest != "") rs += (order.detailDest ?? "");
-    if (order.wardDest != "") rs += (rs != ""?", ":"") + (order.wardDest ?? "");
-    if (order.districtDest != "") rs += (rs != ""?", ":"") + (order.districtDest ?? "");
-    if (order.provinceDest != "") rs += (rs != ""?", ":"") + (order.provinceDest ?? "");
+    if (order.wardDest != "")
+      rs += (rs != "" ? ", " : "") + (order.wardDest ?? "");
+    if (order.districtDest != "")
+      rs += (rs != "" ? ", " : "") + (order.districtDest ?? "");
+    if (order.provinceDest != "")
+      rs += (rs != "" ? ", " : "") + (order.provinceDest ?? "");
     rsList.add(rs);
 
     return rsList;
@@ -96,29 +104,33 @@ class _GGMapDirectionState extends State<GGMapDirection> {
   }
 
   Future<void> _drawRoute() async {
-    final response = await http.get(Uri.parse(
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${widget.order.latSource!},${widget.order.longSource!}&destination=${widget.order.latDestination!},${widget.order.longDestination!}&key=AIzaSyB1D4XCGPDidtXUwOw1K-gQ8VPB2c4IxC8'));
+    try {
+      final response = await http.get(Uri.parse(
+          'https://maps.googleapis.com/maps/api/directions/json?origin=${widget.order.latSource!},${widget.order.longSource!}&destination=${widget.order.latDestination!},${widget.order.longDestination!}&key=AIzaSyB1D4XCGPDidtXUwOw1K-gQ8VPB2c4IxC8'));
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-      if (data['routes'].isNotEmpty) {
-        final route = data['routes'][0];
-        final overviewPolyline = route['overview_polyline']['points'];
-        final points = _decodePolyline(overviewPolyline);
-        if (mounted) {
-          setState(() {
-            _polylines.add(Polyline(
-              polylineId: PolylineId('route'),
-              points: points,
-              color: Colors.blue,
-              width: 5,
-            ));
-          });
+        if (data['routes'].isNotEmpty) {
+          final route = data['routes'][0];
+          final overviewPolyline = route['overview_polyline']['points'];
+          final points = _decodePolyline(overviewPolyline);
+          if (mounted) {
+            setState(() {
+              _polylines.add(Polyline(
+                polylineId: PolylineId('route'),
+                points: points,
+                color: Colors.blue,
+                width: 5,
+              ));
+            });
+          }
         }
+      } else {
+        throw Exception('Failed to load directions');
       }
-    } else {
-      throw Exception('Failed to load directions');
+    } catch (error) {
+      print(error.toString());
     }
   }
 
@@ -179,6 +191,43 @@ class _GGMapDirectionState extends State<GGMapDirection> {
     );
   }
 
+  void _zoomIn() {
+    mapController.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  void _zoomOut() {
+    mapController.animateCamera(CameraUpdate.zoomOut());
+  }
+
+  void _getPermissions() async {
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) async {
+      await Geolocator.requestPermission();
+      print("ERROR" + error.toString());
+    });
+    _getCurrentLocation();
+  }
+
+  LatLng current = LatLng(0, 0);
+
+  void _getCurrentLocation() {
+    Geolocator.getPositionStream().listen((Position position) {
+      if (mounted)
+        setState(() {
+          current = 
+              LatLng(position.latitude, position.longitude);
+        });
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _getPermissions();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -186,11 +235,14 @@ class _GGMapDirectionState extends State<GGMapDirection> {
         GoogleMap(
           onMapCreated: _onMapCreated,
           initialCameraPosition: _initialCameraPosition,
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
           markers: {source, destination},
           polylines: _polylines,
         ),
         Positioned(
-          top: 20,
+          top: 40,
           left: 10,
           child: Container(
             decoration: BoxDecoration(
@@ -206,7 +258,7 @@ class _GGMapDirectionState extends State<GGMapDirection> {
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.grey),
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () {
                 widget.retur();
               },
@@ -214,7 +266,7 @@ class _GGMapDirectionState extends State<GGMapDirection> {
           ),
         ),
         Positioned(
-          top: 20,
+          top: 40,
           right: 10,
           child: Container(
             decoration: BoxDecoration(
@@ -230,7 +282,7 @@ class _GGMapDirectionState extends State<GGMapDirection> {
               ],
             ),
             child: TextButton(
-              child: Text(_isExpanded ? "Ẩn" : "Hiện thông tin"),
+              child: Text(_isExpanded ? "Ẩn thông tin" : "Hiện thông tin"),
               onPressed: () {
                 setState(() {
                   _isExpanded = !_isExpanded;
@@ -239,13 +291,57 @@ class _GGMapDirectionState extends State<GGMapDirection> {
             ),
           ),
         ),
+        Positioned(
+          bottom: 40,
+          right: 10,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.location_on, size: 36.0, color: Colors.black),
+              onPressed: () {
+                mapController.animateCamera(CameraUpdate.newLatLng(current));
+              },
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 20,
+          left: 15,
+          child: Column(
+            children: [
+              FloatingActionButton(
+                onPressed: _zoomIn,
+                materialTapTargetSize: MaterialTapTargetSize.padded,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.zoom_in, size: 36.0, color: Colors.black),
+              ),
+              SizedBox(height: 10),
+              FloatingActionButton(
+                onPressed: _zoomOut,
+                materialTapTargetSize: MaterialTapTargetSize.padded,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.zoom_out, size: 36.0, color: Colors.black),
+              ),
+            ],
+          ),
+        ),
         _isExpanded
             ? Positioned(
                 top: _isExpanded ? 100 : 10,
                 left: 10,
                 right: 10,
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 3000),
+                child: Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -262,28 +358,40 @@ class _GGMapDirectionState extends State<GGMapDirection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.place, color: Colors.blue, size: 50),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                                'Điểm gửi: ${add1} \nTên: ${widget.order.nameSender} \nSĐT: ${widget.order.phoneNumberSender}',
-                                style: TextStyle(fontSize: 20)),
-                          ),
-                        ],
+                      InkWell(
+                        onTap: () {
+                          mapController.animateCamera(CameraUpdate.newLatLng(
+                              _location1 ?? LatLng(0, 0)));
+                        },
+                        child: Row(
+                          children: [
+                            Icon(Icons.place, color: Colors.blue, size: 50),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                  'Điểm gửi: ${add1} \nTên: ${widget.order.nameSender} \nSĐT: ${widget.order.phoneNumberSender}',
+                                  style: TextStyle(fontSize: 20)),
+                            ),
+                          ],
+                        ),
                       ),
                       SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Icon(Icons.place, color: Colors.red, size: 50),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                                'Điểm nhận: ${add2}\nTên: ${widget.order.nameReceiver} \nSĐT: ${widget.order.phoneNumberReceiver}',
-                                style: TextStyle(fontSize: 20)),
-                          ),
-                        ],
+                      InkWell(
+                        onTap: () {
+                          mapController.animateCamera(CameraUpdate.newLatLng(
+                              _location2 ?? LatLng(0, 0)));
+                        },
+                        child: Row(
+                          children: [
+                            Icon(Icons.place, color: Colors.red, size: 50),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                  'Điểm nhận: ${add2}\nTên: ${widget.order.nameReceiver} \nSĐT: ${widget.order.phoneNumberReceiver}',
+                                  style: TextStyle(fontSize: 20)),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

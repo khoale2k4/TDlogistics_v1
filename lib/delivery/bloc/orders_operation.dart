@@ -1,12 +1,17 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'dart:io';
+import 'package:archive/archive.dart';
+
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 
 import 'package:dio/dio.dart';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
-import 'package:logistics_app/client/models/current.dart';
+import 'package:logistics_app/delivery/models/current.dart';
 
 class CheckingExistOrderCondition {
   String orderId;
@@ -112,55 +117,6 @@ class CreatingOrderByUserInformation {
       required this.serviceType});
 }
 
-class CreatingOrderByAdminAndAgencyInformation {
-  String nameSender;
-  String phoneNumberSender;
-  String nameReceiver;
-  String phoneNumberReceiver;
-  double mass;
-  double height;
-  double width;
-  double length;
-  String provinceSource;
-  String districtSource;
-  String wardSource;
-  String detailSource;
-  String provinceDest;
-  String districtDest;
-  String wardDest;
-  String detailDest;
-  double longSource;
-  double latSource;
-  double longDestination;
-  double latDestination;
-  double cod;
-  String serviceType;
-
-  CreatingOrderByAdminAndAgencyInformation(
-      {required this.nameSender,
-      required this.phoneNumberSender,
-      required this.nameReceiver,
-      required this.phoneNumberReceiver,
-      required this.mass,
-      required this.height,
-      required this.width,
-      required this.length,
-      required this.provinceSource,
-      required this.districtSource,
-      required this.wardSource,
-      required this.detailSource,
-      required this.provinceDest,
-      required this.districtDest,
-      required this.wardDest,
-      required this.detailDest,
-      required this.longSource,
-      required this.latSource,
-      required this.longDestination,
-      required this.latDestination,
-      required this.cod,
-      required this.serviceType});
-}
-
 class UpdatingOrderCondition {
   String orderId;
 
@@ -212,20 +168,51 @@ class CalculatingFeeInfo {
   double height;
   double mass;
 
-  CalculatingFeeInfo(
-      {required this.provinceSource,
-      required this.districtSource,
-      required this.wardSource,
-      required this.detailSource,
-      required this.provinceDest,
-      required this.districtDest,
-      required this.wardDest,
-      required this.detailDest,
-      required this.serviceType,
-      required this.length,
-      required this.width,
-      required this.height,
-      required this.mass});
+  CalculatingFeeInfo({
+    required this.provinceSource,
+    required this.districtSource,
+    required this.wardSource,
+    required this.detailSource,
+    required this.provinceDest,
+    required this.districtDest,
+    required this.wardDest,
+    required this.detailDest,
+    required this.serviceType,
+    required this.length,
+    required this.width,
+    required this.height,
+    required this.mass,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'provinceSource': provinceSource,
+      'districtSource': districtSource,
+      'wardSource': wardSource,
+      'detailSource': detailSource,
+      'provinceDest': provinceDest,
+      'districtDest': districtDest,
+      'wardDest': wardDest,
+      'detailDest': detailDest,
+      'serviceType': serviceType,
+      'length': length,
+      'width': width,
+      'height': height,
+      'mass': mass,
+    };
+  }
+}
+
+class UploadImages {
+  List<File> files;
+
+  UploadImages({required this.files});
+}
+
+class UploadSignature {
+  File file;
+
+  UploadSignature({required this.file});
 }
 
 class UpdatingOrderImageInfo {
@@ -254,18 +241,20 @@ class OrdersOperation {
   final Dio dio;
 
   OrdersOperation()
-      : baseUrl = 'https://api.tdlogistics.net.vn/api/v1/orders',
+      : baseUrl = 'https://api2.tdlogistics.net.vn/v2/orders',
         dio = Dio();
 
-  Future<Map<String, dynamic>> get() async {
+  Future<Map<String, dynamic>> get(String orderId) async {
     var uri = Uri.parse('$baseUrl/search');
-    var headers = {'Content-Type': 'application/json', "Cookie": cookie!};
 
     try {
-      final response =
-          await http.post(uri, headers: headers, body: jsonEncode({}));
+      print(cookie);
+      final response = await http.post(uri,
+          headers: {'Content-Type': 'application/json', "Cookie": cookie!},
+          body: jsonEncode({"orderId": orderId}));
 
-      var respon = json.decode(response.body);
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final respon = json.decode(decodedResponse);
       if (response.statusCode == 400) {
         return {"error": true, "message": response.body};
       }
@@ -281,10 +270,11 @@ class OrdersOperation {
 
   Future<Map<String, dynamic>> calculateFee(CalculatingFeeInfo info) async {
     try {
-      final uri = Uri.parse('$baseUrl/calculatefee');
+      final uri = Uri.parse('$baseUrl/calculate_fee');
       final headers = {'Content-Type': 'application/json', 'Cookie': cookie!};
-      final response =
-          await http.post(uri, headers: headers, body: info.toJson());
+      final response = await http.post(uri,
+          headers: headers, body: jsonEncode(info.toJson()));
+      print(jsonEncode(info));
       final data = json.decode(response.body);
       return {
         'error': "No error",
@@ -297,128 +287,27 @@ class OrdersOperation {
     }
   }
 
-  Future<Map<String, dynamic>> checkExist(
-      CheckingExistOrderCondition condition) async {
-    try {
-      final response = await dio.get(
-        '$baseUrl/check',
-        queryParameters: {'order_id': condition.orderId},
-      );
-      return {
-        'error': response.data['error'],
-        'exist': response.data['existed'],
-        'message': response.data['message']
-      };
-    } catch (e) {
-      print('Error checking exist order: $e');
-      return {'error': e.toString()};
-    }
-  }
-
-  Future<Map<String, dynamic>> checkFileFormat(
-      // Get cookie
-      UploadingOrderFileCondition info) async {
-    try {
-      final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(info.file, filename: info.fileName)
-      });
-
-      final response = await dio.post('$baseUrl/check_file_format',
-          data: formData,
-          options: Options(
-            headers: {'Content-Type': 'multipart/form-data'},
-          ));
-
-      return {
-        'error': response.data['error'],
-        'valid': response.data['valid'],
-        'message': response.data['message']
-      };
-    } catch (e) {
-      print('Error checking file format: $e');
-      return {'error': e.toString()};
-    }
-  }
-
-  Future<Map<String, dynamic>> createByUser(
-      CreatingOrderByUserInformation info) async {
-    var uri = Uri.parse('$baseUrl/create');
-    var headers = {'Content-Type': 'application/json', "Cookie": cookie!};
-
-    try {
-      final response = await http.post(
-        uri,
-        headers: headers,
-        body: json.encode(info),
-      );
-
-      if (response.statusCode == 400) {
-        return {"error": true, "message": response.body};
-      }
-
-      return {
-        "error": false,
-        "message": response.body,
-      };
-    } catch (error) {
-      return {"error": true, "message": error.toString()};
-    }
-  }
-
-  void createByAdminAndAgency(
-      dynamic socket, CreatingOrderByAdminAndAgencyInformation info) {
-    try {
-      socket.emit('notifyNewOrder', info.toJson());
-    } catch (e) {
-      print('Error creating new order: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> createByFile(
-      // Get cookie
-      UploadingOrderFileCondition info) async {
-    try {
-      final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(info.file, filename: info.fileName)
-      });
-
-      final response = await dio.post('$baseUrl/create_by_file',
-          data: formData,
-          options: Options(
-            headers: {'Content-Type': 'multipart/form-data'},
-          ));
-
-      return {
-        'error': response.data['error'],
-        'message': response.data['message']
-      };
-    } catch (e) {
-      print('Error creating orders by file: $e');
-      return {'error': e.toString()};
-    }
-  }
-
   Future<Map<String, dynamic>> update(
       UpdatingOrderInfo info, UpdatingOrderCondition condition) async {
     try {
-      var uri = Uri.parse('$baseUrl/update');
+      var uri = Uri.parse('$baseUrl/update?orderId=${condition.orderId}');
       var headers = {'Content-Type': 'application/json', "Cookie": cookie!};
-      final response = await http.put(
+      final response = await http.post(
         uri,
         headers: headers,
         body: jsonEncode(
           {
-            "order_id": condition.orderId,
             "height": info.height,
             "width": info.width,
             "length": info.length,
             "mass": info.mass,
             "cod": info.cod,
-            // "status_code": info.statusCode
           },
         ),
       );
-      var data = jsonDecode(response.body);
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final data = json.decode(decodedResponse);
+      print(data);
       return {
         'error': response.statusCode == 200 ? "No error" : data['error'],
         'data': data['data'],
@@ -430,166 +319,129 @@ class OrdersOperation {
     }
   }
 
-  Future<Map<String, dynamic>> cancel(
-      // Get cookie
-      CancelingOrderCondition condition) async {
+  Future<Map<String, dynamic>> getImage(String orderId, String type) async {
     try {
-      final response = await dio.delete(
-        '$baseUrl/cancel',
-        queryParameters: {'order_id': condition.orderId},
-      );
+      final uri =
+          Uri.parse('$baseUrl/image/get?orderId=${orderId}&type=${type}');
+      final headers = {'Content-Type': 'application/json', 'Cookie': cookie!};
+      final response = await http.get(uri, headers: headers);
+      final bytes = response.bodyBytes;
+      final archive = ZipDecoder().decodeBytes(bytes);
+      List<Uint8List> extractedFiles = [];
+
+      for (final file in archive) {
+        if (file.isFile) {
+          final data = file.content as List<int>;
+          extractedFiles.add(Uint8List.fromList(data));
+        }
+      }
       return {
-        'error': response.data['error'],
-        'message': response.data['message']
+        'error': "No error",
+        'data': extractedFiles,
+        'message': 'messageee'
       };
     } catch (e) {
-      print('Error canceling order: $e');
+      print('Error getting image: $e');
       return {'error': e.toString()};
     }
   }
 
-  Future<Map<String, dynamic>> updateImage(
-      // Get cookie
-      UpdatingOrderImageInfo info,
-      UpdatingOrderImageCondition condition) async {
+  Future<Map<String, dynamic>> getSig(String orderId, String type) async {
     try {
-      final formData = FormData();
-      for (int i = 0; i < info.files.length; i++) {
-        formData.files.add(MapEntry(
-            'files',
-            MultipartFile.fromBytes(info.files[i],
-                filename: info.fileNames[i])));
-      }
-
-      final response = await dio.post(
-        '$baseUrl/update_images',
-        queryParameters: {
-          'order_id': condition.orderId,
-          'type': condition.type
-        },
-        data: formData,
-      );
-
-      print('Image uploaded successfully: ${response.data}');
-      return response.data;
+      final uri =
+          Uri.parse('$baseUrl/signature/get?orderId=${orderId}&type=${type}');
+      final headers = {'Content-Type': 'application/json', 'Cookie': cookie!};
+      final response = await http.get(uri, headers: headers);
+      final bytes = response.bodyBytes;
+      return {'error': "No error", 'data': bytes, 'message': 'messageee'};
     } catch (e) {
-      print('Error uploading image: $e');
+      print('Error getting image: $e');
       return {'error': e.toString()};
     }
   }
 
-//   Future<List<String>> getImage(UpdatingOrderImageCondition condition) async {// Get cookie
-//     try {
-//       final response = await dio.get('$baseUrl/get_images',
-//           queryParameters: {'order_id': condition.orderId, 'type': condition.type},
-//           options: Options(responseType: ResponseType.bytes,));
+  Future<Map<String, dynamic>> updateImages(
+      String orderId, String taskId, UploadImages info) async {
+    var uri = Uri.parse(
+        '$baseUrl/image/update?orderId=${orderId}&taskId=${taskId}&type=receive');
+    var request = http.MultipartRequest("PUT", uri);
 
-//       final zipFile = ZipDecoder().decodeBytes(response.data);
-//       final imageUrls = <String>[];
+    for (var i = 0; i < info.files.length; i++) {
+      var mimeTypeData =
+          lookupMimeType(info.files[i].path, headerBytes: [0xFF, 0xD8])!
+              .split('/');
+      var file = await http.MultipartFile.fromPath('image', info.files[i].path,
+          contentType: MediaType(mimeTypeData[0], mimeTypeData[1]));
+      request.files.add(file);
+    }
 
-//       for (final file in zipFile.files) {
-//         final bytes = file.content as List<int>;
-//         final blob = Blob([Uint8List.fromList(bytes)]);
-//         final url = Url.createObjectUrlFromBlob(blob);
-//         imageUrls.add(url);
-//       }
+    request.headers['Content-Type'] = "multipart/form-data";
+    request.headers['Cookie'] = cookie!;
 
-//       return imageUrls;
-//     } catch (e) {
-//       print('Error getting image: $e');
-//       return [];
-//     }
-//   }
+    try {
+      var streamResponse = await request.send();
+      var response = await http.Response.fromStream(streamResponse);
+      if(response.statusCode == 413) {
+        return {
+          'error' : true,
+          'message' : "Reached max size"
+        };
+      }
+      
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      var data = json.decode(decodedResponse);
+      return {'error': data["error"], 'message': data["message"]};
+    } catch (error) {
+      print("Error updating images: $error");
+      return {'error': error};
+    }
+  }
 
-//   Future<Map<String, dynamic>> updateSignature(// Get cookie
-//       UpdatingOrderSignatureInfo info, UpdatingOrderImageCondition condition) async {
-//     try {
-//       final formData = FormData.fromMap({
-//         'signature': MultipartFile.fromBytes(info.signature, filename: info.fileName)
-//       });
+  Future<Map<String, dynamic>> updateSignature(
+      String orderId, String taskId, UploadSignature info) async {
+    var uri = Uri.parse(
+        '$baseUrl/signature/update?orderId=$orderId&taskId=$taskId&type=receive');
+    var mimeTypeData =
+        lookupMimeType(info.file.path, headerBytes: [0xFF, 0xD8])?.split('/');
+    if (mimeTypeData == null || mimeTypeData.length != 2) {
+      return {'error': 'Invalid file type'};
+    }
 
-//       final response = await dio.post(
-//           '$baseUrl/signature',
-//           queryParameters: {'order_id': condition.orderId, 'type': condition.type},
-//           data: formData,);
+    var request = http.MultipartRequest("PUT", uri);
+    var file = await http.MultipartFile.fromPath(
+      'image',
+      info.file.path,
+      contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+    );
 
-//       return {
-//         'error': response.data['error'],
-//         'message': response.data['message']
-//       };
-//     } catch (e) {
-//       print('Error uploading image: $e');
-//       return {'error': e.toString()};
-//     }
-//   }
+    request.files.add(file);
+    request.headers['Content-Type'] = "multipart/form-data";
+    request.headers['Cookie'] = cookie!;
+    try {
+      var streamResponse = await request.send();
+      var response = await http.Response.fromStream(streamResponse);
+      if(response.statusCode == 413) {
+        return {
+          'error' : true,
+          'message' : "Reached max size"
+        };
+      }
+    
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      var data = json.decode(decodedResponse);
 
-//   Future<String> getSignature(UpdatingOrderImageCondition condition) async {// Get cookie
-//     try {
-//       final response = await dio.get('$baseUrl/signature',
-//           queryParameters: {'order_id': condition.orderId, 'type': condition.type},
-//           options: Options(responseType: ResponseType.bytes, ));
-
-//       final blob = Blob([Uint8List.fromList(response.data)]);
-//       final imgUrl = Url.createObjectUrlFromBlob(blob);
-
-//       return imgUrl;
-//     } catch (e) {
-//       print('Error getting signature: $e');
-//       return e.toString();
-//     }
-//   }
-// }
-
-// extension on GettingOrdersConditions {
-//   Map<String, dynamic> toJson() {
-//     return {
-//       'order_id': orderId,
-//       'name_receiver': nameReceiver,
-//       'phone_receiver': phoneReceiver,
-//       'province_source': provinceSource,
-//       'district_source': districtSource,
-//       'ward_source': wardSource,
-//       'province_dest': provinceDest,
-//       'district_dest': districtDest,
-//       'ward_dest': wardDest,
-//       'service_type': serviceType
-//     };
-//   }
+      return {'error': data["error"], 'message': data["message"]};
+    } catch (error) {
+      print("Error updating signature: $error");
+      return {'error': error.toString()};
+    }
+  }
 }
 
 extension on CreatingOrderByUserInformation {
   Map<String, dynamic> toJson() {
     return {
       'name_sender': nameSender,
-      'name_receiver': nameReceiver,
-      'phone_number_receiver': phoneNumberReceiver,
-      'mass': mass,
-      'height': height,
-      'width': width,
-      'length': length,
-      'province_source': provinceSource,
-      'district_source': districtSource,
-      'ward_source': wardSource,
-      'detail_source': detailSource,
-      'province_dest': provinceDest,
-      'district_dest': districtDest,
-      'ward_dest': wardDest,
-      'detail_dest': detailDest,
-      'long_source': longSource,
-      'lat_source': latSource,
-      'long_destination': longDestination,
-      'lat_destination': latDestination,
-      'COD': cod,
-      'service_type': serviceType
-    };
-  }
-}
-
-extension on CreatingOrderByAdminAndAgencyInformation {
-  Map<String, dynamic> toJson() {
-    return {
-      'name_sender': nameSender,
-      'phone_number_sender': phoneNumberSender,
       'name_receiver': nameReceiver,
       'phone_number_receiver': phoneNumberReceiver,
       'mass': mass,
@@ -622,7 +474,7 @@ extension on UpdatingOrderInfo {
       'width': width,
       'length': length,
       'COD': cod,
-      'status_code': statusCode
+      'statusCode': statusCode
     };
   }
 }
@@ -630,15 +482,15 @@ extension on UpdatingOrderInfo {
 extension on CalculatingFeeInfo {
   Map<String, dynamic> toJson() {
     return {
-      'province_source': provinceSource,
-      'district_source': districtSource,
-      'ward_source': wardSource,
-      'detail_source': detailSource,
-      'province_dest': provinceDest,
-      'district_dest': districtDest,
-      'ward_dest': wardDest,
-      'detail_dest': detailDest,
-      'service_type': serviceType,
+      'provinceSource': provinceSource,
+      'districtSource': districtSource,
+      'wardSource': wardSource,
+      'detailSource': detailSource,
+      'provinceDest': provinceDest,
+      'districtDest': districtDest,
+      'wardDest': wardDest,
+      'detailDest': detailDest,
+      'serviceType': serviceType,
       'length': length,
       'width': width,
       'height': height,

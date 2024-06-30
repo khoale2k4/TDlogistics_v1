@@ -207,6 +207,12 @@ class _OrderInforState extends State<OrderInfor> {
                   controller: weight,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    int? val = int.tryParse(value);
+                    if(val != null){
+                      wei = val;
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: "Khối lượng (g)",
                     border: const OutlineInputBorder(),
@@ -272,6 +278,12 @@ class _OrderInforState extends State<OrderInfor> {
                   controller: length,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    int? val = int.tryParse(value);
+                    if(val != null){
+                      len = val;
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: "Dài (cm)",
                     border: const OutlineInputBorder(),
@@ -313,6 +325,12 @@ class _OrderInforState extends State<OrderInfor> {
                   controller: width,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    int? val = int.tryParse(value);
+                    if(val != null){
+                      wid = val;
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: "Rộng (cm)",
                     border: const OutlineInputBorder(),
@@ -353,6 +371,12 @@ class _OrderInforState extends State<OrderInfor> {
                   controller: height,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    int? val = int.tryParse(value);
+                    if(val != null){
+                      hei = val;
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: "Cao (cm)",
                     border: const OutlineInputBorder(),

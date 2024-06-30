@@ -131,7 +131,7 @@ class _EmailValidationState extends State<EmailValidation> {
                         print(result);
 
                         if (result['error'] == "No error") {
-                          loadOrders();
+                          await loadOrders();
                           await loadUserInfor();
 
                           Navigator.pop(context);

@@ -31,7 +31,7 @@ class _CusCareState extends State<CusCare> {
                 child: Column(
                   children: [
                     const SizedBox(
-                      height: 10,
+                      height: 30,
                     ),
                     Container(
                       width: MediaQuery.of(context).size.width - 40,
@@ -266,7 +266,7 @@ class _CusCareState extends State<CusCare> {
             ),
           ),
           Positioned(
-            top: 40,
+            top: 50,
             right: 20,
             child: Builder(
               builder: (context) {

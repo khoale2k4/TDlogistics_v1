@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logistics_app/delivery/models/current.dart';
 import 'package:logistics_app/delivery/models/order.dart';
+import 'package:logistics_app/delivery/widgets/qr_scanner.dart';
 import '../../widgets/drawer.dart';
 
 class History extends StatefulWidget {
@@ -11,10 +12,30 @@ class History extends StatefulWidget {
 }
 
 class _HistoryState extends State<History> {
+  List<Order> filteredOrders = [];
+  TextEditingController searchController = TextEditingController();
+  
+  @override
+  void initState() {
+    super.initState();
+    filteredOrders.addAll(history);
+  }
+  void updateSearch(String str) {
+    setState(() {
+      searchController.text = str;
+    });
+  }
+
+  void searchId(String id) {
+    setState(() {
+      filteredOrders =
+          history.where((order) => order.orderId!.contains(id)).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 223, 223, 223),
       drawer: const MyDrawer(),
       body: SingleChildScrollView(
         child: Stack(
@@ -24,7 +45,7 @@ class _HistoryState extends State<History> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const SizedBox(
-                    height: 20,
+                    height: 80,
                   ),
                   Container(
                     width: MediaQuery.of(context).size.width - 40,
@@ -57,21 +78,44 @@ class _HistoryState extends State<History> {
                         Container(
                           alignment: Alignment.centerLeft,
                           width: MediaQuery.of(context).size.width - 80,
-                          padding: const EdgeInsets.only(
-                              left: 10, right: 10, top: 10),
+                          padding: const EdgeInsets.only(left: 10, right: 10),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: TextField(
                             textAlign: TextAlign.left,
+                            textAlignVertical: TextAlignVertical.center,
+                            onChanged: (value) {
+                                      if (value.isEmpty) {
+                                        setState(() {
+                                          filteredOrders = history;
+                                        });
+                                      } else {
+                                        setState(() {
+                                          searchId(value);
+                                        });
+                                      }
+                                    },
                             decoration: InputDecoration(
                               hintText: 'Tìm kiếm theo mã đơn hàng',
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
                               suffixIcon: IconButton(
-                                onPressed: () {},
+                                padding: EdgeInsets.zero,
+                                onPressed: () async{
+                                          final qrResult = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    QRViewExample()),
+                                          );
+
+                                          if (qrResult != null) {
+                                            updateSearch(qrResult);
+                                            searchId(qrResult);
+                                          }},
                                 icon: const Icon(
                                   Icons.camera_alt_outlined,
                                   size: 20,
@@ -80,30 +124,42 @@ class _HistoryState extends State<History> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
                         Container(
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10)),
-                          child: history.isEmpty
-                              ? const Text("Danh sách trống")
-                              : ListView.builder(
-                                  padding: EdgeInsets.zero,
-                                  itemCount: history.length,
-                                  shrinkWrap: true,
-                                  itemBuilder: (context, index) {
-                                    return Column(
-                                      children: [
-                                        Container(
-                                          height: 10,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width -
-                                              60,
-                                        ),
-                                        HisCard(order: history[index]),
-                                      ],
-                                    );
-                                  },
+                          child: filteredOrders.isEmpty
+                              ? const Column(
+                                  children: [
+                                    SizedBox(height: 10),
+                                    Text("Danh sách trống"),
+                                  ],
+                                )
+                              : ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxHeight:
+                                        MediaQuery.of(context).size.height -
+                                            250,
+                                  ),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    itemCount: filteredOrders.length,
+                                    shrinkWrap: true,
+                                    itemBuilder: (context, index) {
+                                      return Column(
+                                        children: [
+                                          Container(
+                                            height: 10,
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width -
+                                                60,
+                                          ),
+                                          HisCard(order: filteredOrders[index]),
+                                        ],
+                                      );
+                                    },
+                                  ),
                                 ),
                         ),
                         const SizedBox(
@@ -116,7 +172,7 @@ class _HistoryState extends State<History> {
               ),
             ),
             Positioned(
-              top: 20,
+              top: 40,
               right: 20,
               child: Builder(
                 builder: (context) {
@@ -145,6 +201,125 @@ class HisCard extends StatefulWidget {
 }
 
 class _HisCardState extends State<HisCard> {
+  void showReceiveImages(Order order) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ảnh nhận hàng',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                order.receiveImgs!.isEmpty
+                    ? const Text('Danh sách trống')
+                    : Container(
+                        height: 250,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: order.receiveImgs!.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 20.0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(context,
+                                      MaterialPageRoute(builder: (_) {
+                                    return Scaffold(
+                                      appBar: AppBar(
+                                        title: Text(
+                                          'Ảnh nhận',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        backgroundColor: Colors.black,
+                                        iconTheme:
+                                            IconThemeData(color: Colors.grey),
+                                      ),
+                                      backgroundColor:
+                                          const Color.fromARGB(255, 27, 27, 27),
+                                      body: Center(
+                                        child: Image.memory(
+                                          order.receiveImgs![index],
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                    );
+                                  }));
+                                },
+                                child: Image.memory(
+                                  order.receiveImgs![index],
+                                  fit: BoxFit.contain,
+                                  width: 150,
+                                  height: 150,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                const Text(
+                  'Ảnh ký nhận hàng',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                order.receiveSig == null
+                    ? const Text('Không có chữ ký')
+                    : Container(
+                        height: 100,
+                        width: 75,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (_) {
+                              return Scaffold(
+                                appBar: AppBar(
+                                  title: Text(
+                                    'Ảnh ký gửi hàng',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: Colors.black,
+                                  iconTheme: IconThemeData(color: Colors.grey),
+                                ),
+                                backgroundColor:
+                                    const Color.fromARGB(255, 27, 27, 27),
+                                body: Center(
+                                  child: Image.memory(
+                                    order.receiveSig!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              );
+                            }));
+                          },
+                          child: Image.memory(
+                            order.receiveSig!,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Đóng'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -158,10 +333,10 @@ class _HisCardState extends State<HisCard> {
             Row(
               children: [
                 const Text(
-                  "ID đơn hàng: ",
+                  "ID: ",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                Text(widget.order.orderId??"Chưa có thông tin"),
+                Text(widget.order.orderId ?? "Chưa có thông tin"),
               ],
             ),
             Row(
@@ -170,7 +345,7 @@ class _HisCardState extends State<HisCard> {
                   "Người nhận: ",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                Text(widget.order.nameReceiver??"Chưa có thông tin"),
+                Text(widget.order.nameReceiver ?? "Chưa có thông tin"),
               ],
             ),
             Row(
@@ -179,7 +354,7 @@ class _HisCardState extends State<HisCard> {
                   "SĐT người nhận: ",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                Text(widget.order.phoneNumberReceiver??"Chưa có thông tin"),
+                Text(widget.order.phoneNumberReceiver ?? "Chưa có thông tin"),
               ],
             ),
             Row(
@@ -188,7 +363,7 @@ class _HisCardState extends State<HisCard> {
                   "Khối lượng: ",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                Text("${widget.order.mass??"0"} g"),
+                Text("${widget.order.mass ?? "0"} g"),
               ],
             ),
             Row(
@@ -197,7 +372,7 @@ class _HisCardState extends State<HisCard> {
                   "COD: ",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                Text("${widget.order.cod??"0"} VNĐ"),
+                Text("${widget.order.cod ?? "0"} VNĐ"),
               ],
             ),
             Row(
@@ -206,11 +381,20 @@ class _HisCardState extends State<HisCard> {
                   "Ngày giao: ",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                Text((widget.order.completeDate ?? "Đang được giao")
+                Text((widget.order.lastUpdate ?? "Đang được giao")
                     .replaceFirst("T", " ")
                     .replaceFirst(".000Z", "")),
               ],
             ),
+              TextButton(
+                onPressed: () {
+                  showReceiveImages(widget.order);
+                },
+                child: const Text(
+                  'Xem ảnh',
+                  style: TextStyle(color: Colors.pink),
+                ),
+              ),
           ],
         ),
       ),

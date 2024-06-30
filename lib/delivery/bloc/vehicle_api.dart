@@ -185,7 +185,7 @@ class VehicleOperation {
   final String baseUrl;
 
   VehicleOperation()
-      : baseUrl = "https://api.tdlogistics.net.vn/api/v1/vehicles";
+      : baseUrl = "https://api2.tdlogistics.net.vn/v2/vehicles";
 
   Future<Map<String, dynamic>> checkExist(
       CheckingExistVehicleCondition condition) async {

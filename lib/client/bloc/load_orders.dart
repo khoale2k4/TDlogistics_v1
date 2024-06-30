@@ -1,7 +1,7 @@
 import 'package:logistics_app/client/models/order.dart';
 import 'package:logistics_app/client/models/current.dart';
 
-void loadOrders() async {
+Future<void> loadOrders() async {
   orders.clear();
   var orderHistory = (await ordersOperation.get());
 

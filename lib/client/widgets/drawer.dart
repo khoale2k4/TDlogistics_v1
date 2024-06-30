@@ -99,14 +99,19 @@ class _MyDrawerState extends State<MyDrawer> {
                 ),
               ),
               UserAccountsDrawerHeader(
-                accountName: Text(user.name ?? "Chưa có thông tin", style: TextStyle(fontWeight: FontWeight.bold),),
-                accountEmail: Text(user.email ?? "Chưa có thông tin", style: TextStyle(fontWeight: FontWeight.bold),),
+                accountName: Text(
+                  user.name ?? "Chưa có thông tin",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                accountEmail: Text(
+                  user.email ?? "Chưa có thông tin",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 currentAccountPicture: CircleAvatar(
-                  backgroundImage: imageBytes != null
-                            ? MemoryImage(imageBytes!)
-                            : const AssetImage("lib/client/assets/avt.jpg")
-                                as ImageProvider),
-                
+                    backgroundImage: imageBytes != null
+                        ? MemoryImage(imageBytes!)
+                        : const AssetImage("lib/client/assets/avt.jpg")
+                            as ImageProvider),
                 decoration: const BoxDecoration(
                   color: Colors.red,
                 ),
@@ -120,7 +125,8 @@ class _MyDrawerState extends State<MyDrawer> {
                 },
                 child: const Text(
                   'Nhấn vào đây để chỉnh sửa thông tin',
-                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  style:
+                      TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                 ),
               ),
               ListTile(
@@ -155,13 +161,18 @@ class _MyDrawerState extends State<MyDrawer> {
               ),
             ],
           ),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Đăng xuất'),
-            onTap: () {
-              logout();
-              clearData();
-            },
+          Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Đăng xuất'),
+                onTap: () {
+                  logout();
+                  clearData();
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
         ],
       ),

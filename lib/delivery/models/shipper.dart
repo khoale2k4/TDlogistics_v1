@@ -1,78 +1,86 @@
-class Shipper {
-  int? id;
-  String? partnerId;
-  String? agencyId;
-  String? staffId;
-  String? fullname;
-  String? username;
-  String? password;
-  String? dateOfBirth;
-  String? cccd;
-  String? email;
-  String? phoneNumber;
-  String? province;
-  String? district;
-  String? town;
-  String? role;
-  String? detailAddress;
-  String? position;
-  String? bin;
-  String? bank;
-  dynamic avatar;
-  String? imageLicense;
-  int? active;
-  String? createdAt;
-  String? lastUpdate;
 
-  Shipper(
-      {this.id,
-      this.partnerId,
-      this.agencyId,
-      this.staffId,
-      this.fullname,
-      this.username,
-      this.password,
-      this.dateOfBirth,
-      this.cccd,
-      this.email,
-      this.phoneNumber,
-      this.province,
-      this.district,
-      this.town,
-      this.role,
-      this.detailAddress,
-      this.position,
-      this.bin,
-      this.bank,
-      this.avatar,
-      this.imageLicense,
-      this.active,
-      this.createdAt,
-      this.lastUpdate});
-  void fromJson(Map<String, dynamic> json) {
-    id = json["id"];
-    partnerId = json["partner_id"];
-    agencyId = json["agency_id"];
-    staffId = json["staff_id"];
-    fullname = json["fullname"];
-    username = json["username"];
-    password = json["password"];
-    dateOfBirth = json["date_of_birth"];
-    cccd = json["cccd"];
-    email = json["email"];
-    phoneNumber = json["phone_number"];
-    province = json["province"];
-    district = json["district"];
-    town = json["town"];
-    role = json["role"];
-    detailAddress = json["detail_address"];
-    position = json["position"];
-    bin = json["bin"];
-    bank = json["bank"];
-    avatar = json["avatar"];
-    imageLicense = json["image_license"];
-    active = json["active"];
-    createdAt = json["created_at"];
-    lastUpdate = json["last_update"];
-  }
+class Shipper {
+    Account? account;
+    String? agencyId;
+    String? staffId;
+    String? fullname;
+    String? cccd;
+    String? province;
+    String? district;
+    String? town;
+    String? detailAddress;
+    String? position;
+    int? salary;
+    List<int>? dateCreated;
+    List<int>? dateModified;
+
+    Shipper({this.account, this.agencyId, this.staffId, this.fullname, this.cccd, this.province, this.district, this.town, this.detailAddress, this.position, this.salary, this.dateCreated, this.dateModified});
+
+    Shipper.fromJson(Map<String, dynamic> json) {
+        account = json["account"] == null ? null : Account.fromJson(json["account"]);
+        agencyId = json["agencyId"];
+        staffId = json["staffId"];
+        fullname = json["fullname"];
+        cccd = json["cccd"];
+        province = json["province"];
+        district = json["district"];
+        town = json["town"];
+        detailAddress = json["detailAddress"];
+        position = json["position"];
+        salary = json["salary"];
+        dateCreated = json["dateCreated"] == null ? null : List<int>.from(json["dateCreated"]);
+        dateModified = json["dateModified"] == null ? null : List<int>.from(json["dateModified"]);
+    }
+}
+
+class Account {
+    String? id;
+    String? username;
+    String? password;
+    String? phoneNumber;
+    String? email;
+    String? role;
+    bool? active;
+    List<int>? createdAt;
+    List<int>? lastUpdate;
+    bool? enabled;
+    List<Authorities>? authorities;
+    bool? accountNonExpired;
+    bool? accountNonLocked;
+    bool? credentialsNonExpired;
+
+    Account({this.id, this.username, this.password, this.phoneNumber, this.email, this.role, this.active, this.createdAt, this.lastUpdate, this.enabled, this.authorities, this.accountNonExpired, this.accountNonLocked, this.credentialsNonExpired});
+
+    Account.fromJson(Map<String, dynamic> json) {
+        id = json["id"];
+        username = json["username"];
+        password = json["password"];
+        phoneNumber = json["phoneNumber"];
+        email = json["email"];
+        role = json["role"];
+        active = json["active"];
+        createdAt = json["createdAt"] == null ? null : List<int>.from(json["createdAt"]);
+        lastUpdate = json["lastUpdate"] == null ? null : List<int>.from(json["lastUpdate"]);
+        enabled = json["enabled"];
+        authorities = json["authorities"] == null ? null : (json["authorities"] as List).map((e) => Authorities.fromJson(e)).toList();
+        accountNonExpired = json["accountNonExpired"];
+        accountNonLocked = json["accountNonLocked"];
+        credentialsNonExpired = json["credentialsNonExpired"];
+    }
+}
+
+class Authorities {
+    String? authority;
+
+    Authorities({this.authority});
+
+    Authorities.fromJson(Map<String, dynamic> json) {
+        authority = json["authority"];
+    }
+
+    Map<String, dynamic> toJson() {
+        final Map<String, dynamic> _data = <String, dynamic>{};
+        _data["authority"] = authority;
+        return _data;
+    }
 }

@@ -340,7 +340,7 @@ class FindingPartnerAvatarAndLicenseCondition {
 }
 
 class PartnerStaffOperation {
-  final String baseUrl = "https://api.tdlogistics.net.vn/api/v1/partner_staffs";
+  final String baseUrl = "https://api2.tdlogistics.net.vn/v2/staffs";
 
   Future<Map<String, dynamic>> getAuthenticatedPartnerStaffInfo() async {
     try {

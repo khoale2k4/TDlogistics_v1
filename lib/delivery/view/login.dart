@@ -3,9 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:logistics_app/delivery/bloc/driver_api.dart';
+import 'package:logistics_app/delivery/bloc/load.dart';
 import 'package:logistics_app/delivery/bloc/staff_shipper_api.dart';
 import 'package:logistics_app/delivery/models/order.dart';
 import 'package:logistics_app/delivery/models/shipment.dart';
+import 'package:logistics_app/delivery/models/shipper.dart';
 import 'package:logistics_app/delivery/models/vehicle.dart';
 import 'package:logistics_app/delivery/view/driver/shipments.dart';
 import '../models/current.dart';
@@ -19,9 +21,10 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  bool isPartnet = false;
-  String? username = "minhluxuan2k15";
-  String? password = "minhluxuan@TDlogistics2k24";
+  bool isPartnet = true;
+  bool showPassword = false;
+  String? username = "minhluxuanSP";
+  String? password = "LUXUANMINH@2k4";
 
   void showLoading() {
     showDialog<String>(
@@ -67,15 +70,15 @@ class _LoginState extends State<Login> {
                   child: Column(
                     children: [
                       Image.asset('lib/client/assets/logo.png', height: 75),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'TD LOGISTICS',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      // const SizedBox(height: 20),
+                      // const Text(
+                      //   'TD LOGISTICS',
+                      //   style: TextStyle(
+                      //     color: Colors.white,
+                      //     fontSize: 24,
+                      //     fontWeight: FontWeight.bold,
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
@@ -106,12 +109,15 @@ class _LoginState extends State<Login> {
                         },
                         decoration: InputDecoration(
                           labelText: 'Tên tài khoản',
+                          prefixIcon: Icon(Icons.person),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide.none,
                           ),
                           filled: true,
                           fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 15, horizontal: 20),
                         ),
                       ),
                     ),
@@ -119,19 +125,34 @@ class _LoginState extends State<Login> {
                     SizedBox(
                       width: 300,
                       child: TextField(
+                        textAlignVertical: TextAlignVertical.center,
                         onChanged: (value) {
                           setState(() {
                             password = value;
                           });
                         },
+                        obscureText: !showPassword,
                         decoration: InputDecoration(
                           labelText: 'Mật khẩu',
+                          prefixIcon: Icon(Icons.lock),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                showPassword = !showPassword;
+                              });
+                            },
+                            icon: Icon(showPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide.none,
                           ),
                           filled: true,
                           fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 15, horizontal: 20),
                         ),
                       ),
                     ),
@@ -225,49 +246,48 @@ class _LoginState extends State<Login> {
                         onPressed: () async {
                           showLoading();
                           if (isPartnet) {
-                            var result = await staffsAuthenticate.login(
-                                username!, password!);
-                            if (result["message"] == "Xác thực thành công.") {
+                            var result =
+                                await authOperation.login(username!, password!);
+                            print(result);
+                            if (result["error"] == false) {
                               var info = await staffsOperation
                                   .getAuthenticatedStaffInfo();
+                              if (info["data"] == null) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(info["message"])),
+                                );
+                                return;
+                              }
 
                               setState(() {
-                                shipper.fromJson(info["data"]);
+                                shipper = Shipper.fromJson(info["data"]);
                               });
-
-                              
-                          var staffAvatar = await staffsOperation.getAvatar(FindingAvatarCondition(staffId: shipper.staffId!));
-                          setState(() {
-                            imageBytes = Uint8List.fromList(List<int>.from(staffAvatar["data"]));
-                          });
-
-                              var orderHistory =
-                                  (await shippersOperation.getHistory(
-                                      GettingShipperHistoryInfo(option: 0)));
-                              var hisData = orderHistory["data"];
-                              for (int i = 0; i < hisData.length; i++) {
-                                setState(() {
-                                  history
-                                      .add(Order.fromJson(hisData[i]["order"]));
-                                  history[i].id = hisData[i]["id"];
-                                  history[i].completeDate =
-                                      hisData[i]["completed_at"];
-                                });
+                              if (shipper.account!.role! != "SHIPPER") {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text('Bạn không phải SHIPPER')),
+                                );
+                                return;
                               }
 
-                              result = await shippersOperation.getTask(
-                                  GettingTasksCondition(
-                                      staffId: shipper.staffId!, option: 0));
+                              await loadHistory();
+                              await loadTasks();
+                              await loadAvatar();
 
-                              var tasks = result["data"];
-                              for (int i = 0; i < tasks.length; i++) {
-                                setState(() {
-                                  orders.add(Order.fromJson(tasks[i]["order"]));
-                                  orders[i].id = tasks[i]["id"];
-                                });
+                              for(var i = 0; i < orders.length; i++){
+                                await loadImages(orders[i]);
                               }
+                              for(var i = 0; i < history.length; i++){
+                                await loadImages(history[i]);
+                                print(history[i].receiveImgs);
+                              }
+
+
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
+                                    backgroundColor: Colors.green,
                                     content: Text('Đăng nhập thành công')),
                               );
                               Navigator.pop(context);
@@ -279,15 +299,14 @@ class _LoginState extends State<Login> {
                             } else {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text('Sai tài khoản hoặc mật khẩu!')),
+                                SnackBar(
+                                    content: Text('Lỗi: ${result["message"]}')),
                               );
                             }
                           } else {
-                            var result = await partnerStaffAuthenticate.login(
-                                username!, password!);
-                            if (result["message"] == "Xác thực thành công.") {
+                            var result =
+                                await authOperation.login(username!, password!);
+                            if (result["error"] == false) {
                               var info = await partnerStaffOperation
                                   .getAuthenticatedPartnerStaffInfo();
                               setState(() {

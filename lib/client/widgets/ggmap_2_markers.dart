@@ -175,7 +175,7 @@ class _GGMap2MarkerState extends State<GGMap2Marker> {
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.map, color: Colors.grey),
+              icon: const Icon(Icons.map, color: Colors.black),
               onPressed: () {
                 widget.func();
               },

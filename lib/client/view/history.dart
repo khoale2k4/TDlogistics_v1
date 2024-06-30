@@ -283,7 +283,7 @@ class _HistoryState extends State<History> {
                           alignment: Alignment.center,
                           child: TextButton(
                             child: Text(
-                                isDeleting ? "Hoàn thành" : "Xoá đơn hàng"),
+                                isDeleting ? "Hoàn thành" : "Xoá đơn hàng", style: TextStyle(color: Colors.black)),
                             onPressed: () {
                               setState(() {
                                 isDeleting = !isDeleting;

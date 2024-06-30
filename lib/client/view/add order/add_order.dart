@@ -97,7 +97,7 @@ class _OrderFormState extends State<OrderForm> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.map, color: Colors.grey),
+                                icon: const Icon(Icons.map, color: Colors.black),
                                 onPressed: () {
                                   notCollapsed();
                                   setState(() {
@@ -346,6 +346,7 @@ print(newOrder.cod);
                                   Navigator.pop(context);
                                   var result = await ordersOperation
                                       .createByUser(newOrder);
+                                      await loadOrders();
                                   if (result["error"] == false) {
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(snackBar);

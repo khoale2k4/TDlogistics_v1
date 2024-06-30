@@ -53,7 +53,7 @@ class GettingHistoryInfo {
 class DriversOperation {
   final String baseUrl;
 
-  DriversOperation() : baseUrl = 'https://api.tdlogistics.net.vn/api/v1/drivers';
+  DriversOperation() : baseUrl = 'https://api2.tdlogistics.net.vn/v2/drivers';
 
   // ROLE: ADMIN, MANAGER, HUMAN_RESOURCE_MANAGER, AGENCY_MANAGER, AGENCY_HUMAN_RESOURCE_MANAGER
   Future<Map<String, dynamic>> getObjectsCanHandleTask() async {

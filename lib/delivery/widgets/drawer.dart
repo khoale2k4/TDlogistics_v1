@@ -92,6 +92,12 @@ class _MyDrawerState extends State<MyDrawer> {
                 decoration: const BoxDecoration(
                   color: Colors.red,
                 ),
+              height: 50
+                ),
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                ),
                 padding: const EdgeInsets.all(16.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15.0),
@@ -104,11 +110,15 @@ class _MyDrawerState extends State<MyDrawer> {
               ),
               ListTile(
                 leading: const Icon(Icons.person, color: Colors.red),
-                title: Text(widget.isStaff? shipper.fullname!:driver.fullname!),
+                title:
+                    Text(widget.isStaff ? shipper.fullname! : driver.fullname!),
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => widget.isStaff? const StaffInfor():const PartnerStaffInfor()),
+                    MaterialPageRoute(
+                        builder: (context) => widget.isStaff
+                            ? const StaffInfor()
+                            : const PartnerStaffInfor()),
                   );
                 },
               ),
@@ -119,28 +129,39 @@ class _MyDrawerState extends State<MyDrawer> {
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => widget.isStaff? const OrderList():const ShipmentList()),
+                    MaterialPageRoute(
+                        builder: (context) => widget.isStaff
+                            ? const OrderList()
+                            : const ShipmentList()),
                   );
                 },
               ),
-              widget.isStaff? ListTile(
-                leading: const Icon(Icons.history, color: Colors.red),
-                title: const Text('Lịch sử'),
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const History()),
-                  );
-                },
-              ):Container(),
+              widget.isStaff
+                  ? ListTile(
+                      leading: const Icon(Icons.history, color: Colors.red),
+                      title: const Text('Lịch sử'),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const History()),
+                        );
+                      },
+                    )
+                  : Container(),
             ],
           ),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Đăng xuất'),
-            onTap: () {
-              logout();
-            },
+          Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Đăng xuất'),
+                onTap: () {
+                  logout();
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
         ],
       ),

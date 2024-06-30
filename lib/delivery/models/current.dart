@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:logistics_app/delivery/bloc/auth_api.dart';
 import 'package:logistics_app/delivery/bloc/partner_staff_api.dart';
 import 'package:logistics_app/delivery/bloc/driver_api.dart';
 import 'package:logistics_app/delivery/bloc/staff_shipper_api.dart';
@@ -11,11 +12,9 @@ import 'package:logistics_app/delivery/models/order.dart';
 import 'package:logistics_app/delivery/models/shipper.dart';
 import 'package:logistics_app/delivery/models/vehicle.dart';
 
-PartnerStaffAuthenticate partnerStaffAuthenticate = PartnerStaffAuthenticate();
-StaffsAuthenticate staffsAuthenticate = StaffsAuthenticate();
+AuthOperation authOperation = AuthOperation();
 
 Order order = Order(
-  id: 1,
   orderId: "123456",
   nameSender: "L K",
   phoneNumberSender: "0321546658",
@@ -41,8 +40,8 @@ Order order = Order(
   statusCode: 5,
   fee: 10000
 );
-List<Order> history = [order];
-List<Order> orders = [order];
+List<Order> history = [];
+List<Order> orders = [];
 List<Vehicle> vehicles = [];
 
 String? cookie;

@@ -52,10 +52,59 @@ class _InforState extends State<Infor> {
     });
   }
 
+  Future<String?> showOptionDialog(BuildContext context) {
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Chọn nguồn ảnh'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop('Option 1');
+              },
+              child: Row(
+                children: [
+                  Icon(Icons.camera),
+                  Text('  Máy ảnh'),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop('Option 2');
+              },
+              child: Row(
+                children: [
+                  Icon(Icons.photo),
+                  Text('  Thư viện'),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop('Null');
+                  },
+                  child: Text("Đóng"),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _pickImage() async {
     try {
-      final pickedFile =
-          await ImagePicker().pickImage(source: ImageSource.gallery);
+      String? result = await showOptionDialog(context);
+      if (result == "Null") return;
+      final pickedFile = await ImagePicker().pickImage(
+          source:
+              result == "Option 1" ? ImageSource.camera : ImageSource.gallery);
       if (pickedFile != null) {
         final Uint8List image = await pickedFile.readAsBytes();
         setState(() {
@@ -65,7 +114,8 @@ class _InforState extends State<Infor> {
         UpdatingAvatarPayload updatingUserAvatarInfo =
             UpdatingAvatarPayload(avatar: File(pickedFile.path));
 
-        var response = await customerOperation.updateAvatar(updatingUserAvatarInfo);
+        var response =
+            await customerOperation.updateAvatar(updatingUserAvatarInfo);
         if (response['error'] != 'false') {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Lỗi: ${response['message']}')),
@@ -126,7 +176,8 @@ class _InforState extends State<Infor> {
                     ),
                     Container(
                       width: MediaQuery.of(context).size.width - 80,
-                      height: MediaQuery.of(context).size.height - (editing?450:390),
+                      height: MediaQuery.of(context).size.height -
+                          (editing ? 450 : 390),
                       decoration: BoxDecoration(
                         border: Border.all(width: 1, color: Colors.grey),
                         borderRadius: BorderRadius.circular(10),
@@ -200,10 +251,6 @@ class _InforState extends State<Infor> {
                               edit: editing,
                               initText: user.address,
                             ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(title: "Vai trò", info: user.role!),
                             const SizedBox(
                               height: 20,
                             ),
@@ -297,21 +344,23 @@ class _InforState extends State<Infor> {
                                   editing = !editing;
                                 });
 
-                                var infor = await customerOperation.getAuthenticatedCustomerInfo();
-                                
-                              setState(() {
-                                user.id = infor['data']['id'];
-                                user.name = infor['data']['fullname'];
-                                user.city = infor['data']['province'];
-                                user.district = infor['data']['district'];
-                                user.ward = infor['data']['ward'];
-                                user.address = infor['data']['detailAddress'];
-                                user.email = infor['data']["account"]['email'];
-                                user.phoneNum =
-                                    infor['data']["account"]['phoneNumber'];
-                                user.role = infor['data']["account"]['role'];
-                                user.detail = null;
-                              });
+                                var infor = await customerOperation
+                                    .getAuthenticatedCustomerInfo();
+
+                                setState(() {
+                                  user.id = infor['data']['id'];
+                                  user.name = infor['data']['fullname'];
+                                  user.city = infor['data']['province'];
+                                  user.district = infor['data']['district'];
+                                  user.ward = infor['data']['ward'];
+                                  user.address = infor['data']['detailAddress'];
+                                  user.email =
+                                      infor['data']["account"]['email'];
+                                  user.phoneNum =
+                                      infor['data']["account"]['phoneNumber'];
+                                  user.role = infor['data']["account"]['role'];
+                                  user.detail = null;
+                                });
                               },
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,

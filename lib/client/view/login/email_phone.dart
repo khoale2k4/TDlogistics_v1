@@ -76,6 +76,7 @@ class _LoginUserState extends State<LoginUser> {
                           },
                           decoration: InputDecoration(
                             labelText: 'Email',
+                            prefixIcon:Icon(Icons.mail),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                               borderSide: BorderSide.none,
@@ -94,6 +95,7 @@ class _LoginUserState extends State<LoginUser> {
                           },
                           decoration: InputDecoration(
                             labelText: 'Số điện thoại',
+                            prefixIcon:Icon(Icons.phone),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                               borderSide: BorderSide.none,

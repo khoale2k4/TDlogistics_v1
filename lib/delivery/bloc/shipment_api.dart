@@ -44,7 +44,7 @@ class UndertakingShipmentInfo {
 class ShipmentsOperation {
   final String baseUrl;
 
-  ShipmentsOperation() : baseUrl = "https://api.tdlogistics.net.vn/api/v1/shipments";
+  ShipmentsOperation() : baseUrl = "https://api2.tdlogistics.net.vn/v2/shipments";
 
   Future<Map<String, dynamic>> check(ShipmentID condition) async {
     try {
@@ -215,6 +215,7 @@ class ShipmentsOperation {
         body: jsonEncode(info),
       );
       final data = jsonDecode(response.body);
+      print(data);
       return {'error': data['error'], 'message': data['message']};
     } catch (error) {
       print("Error undertaking shipment: $error");
