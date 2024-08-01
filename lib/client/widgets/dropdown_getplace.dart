@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/cities.dart';
+import '../models/language.dart';
 import '../models/user.dart';
 
 class PlaceDropDown extends StatefulWidget {
@@ -26,6 +27,7 @@ class _PlaceDropDownState extends State<PlaceDropDown> {
   String? selectedProvince;
   String? selectedDistrict;
   String? selectedWard;
+
 
   @override
   void initState() {
@@ -62,7 +64,7 @@ class _PlaceDropDownState extends State<PlaceDropDown> {
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   isExpanded: true,
-                  hint: const Text('Chọn Tỉnh/Thành'),
+                  hint: Text(hintProvince),
                   value: selectedProvince,
                   onChanged: (String? newValue) {
                     setState(() {
@@ -84,9 +86,9 @@ class _PlaceDropDownState extends State<PlaceDropDown> {
             ),
             widget.hasError &&
                     (selectedProvince == null || selectedProvince == "")
-                ? const Text(
-                    "   Vui lòng chọn Tỉnh/Thành",
-                    style: TextStyle(color: Color(0xFFE57373), fontSize: 11),
+                ? Text(
+                    errorProvince,
+                    style: const TextStyle(color: Color(0xFFE57373), fontSize: 11),
                   )
                 : Container()
           ],
@@ -112,7 +114,7 @@ class _PlaceDropDownState extends State<PlaceDropDown> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     isExpanded: true,
-                    hint: const Text('Chọn Quận/Huyện'),
+                    hint: Text(hintDistrict),
                     value: selectedDistrict,
                     onChanged: (String? newValue) {
                       setState(() {
@@ -133,9 +135,9 @@ class _PlaceDropDownState extends State<PlaceDropDown> {
               ),
               widget.hasError &&
                       (selectedDistrict == null || selectedDistrict == "")
-                  ? const Text(
-                      "  Vui lòng chọn Quận/Huyện",
-                      style: TextStyle(color: Color(0xFFE57373), fontSize: 11),
+                  ? Text(
+                      errorDistrict,
+                      style: const TextStyle(color: Color(0xFFE57373), fontSize: 11),
                     )
                   : Container()
             ],
@@ -161,7 +163,7 @@ class _PlaceDropDownState extends State<PlaceDropDown> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     isExpanded: true,
-                    hint: const Text('Chọn Phường/Xã'),
+                    hint: Text(hintWard),
                     value: selectedWard,
                     onChanged: (String? newValue) {
                       setState(() {
@@ -180,9 +182,9 @@ class _PlaceDropDownState extends State<PlaceDropDown> {
                 ),
               ),
               widget.hasError && (selectedWard == null || selectedWard == "")
-                  ? const Text(
-                      "  Vui lòng chọn Phường?Xã",
-                      style: TextStyle(color: Color(0xFFE57373), fontSize: 11),
+                  ? Text(
+                      errorWard,
+                      style: const TextStyle(color: Color(0xFFE57373), fontSize: 11),
                     )
                   : Container()
             ],

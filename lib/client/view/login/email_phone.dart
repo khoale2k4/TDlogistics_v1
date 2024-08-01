@@ -1,9 +1,113 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'username_passwork.dart';
+import 'package:logistics_app/client/bloc/noticefication.dart';
+import 'package:logistics_app/client/bloc/socket.dart';
+import 'package:logistics_app/delivery/view/login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../bloc/load_orders.dart';
+import '../../bloc/load_user_infor.dart';
+import '../../widgets/drawer.dart';
+import '../customer_information.dart';
 import 'email_validation.dart';
 import '../../models/current.dart';
+import '../../models/language.dart';
+
+Future<void> checkLoginStatus(BuildContext context) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? email = prefs.getString('email');
+  String? phoneNumber = prefs.getString('phoneNumber');
+  String? cookie2 = prefs.getString('cookie');
+
+  void cantLogin() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginUser()),
+    );
+  }
+
+  void showExpired() {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(expiredToken),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(close),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  if (email != null && phoneNumber != null && cookie2 != null) {
+    cookie = cookie2;
+    bool isNotExpired = await loadUserInfor();
+    if (!isNotExpired) {
+      logoutCleanEmail();
+      cantLogin();
+      showExpired();
+      return;
+    }
+    await loadOrders();
+    connectSocket();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Infor()),
+    );
+  } else {
+    cantLogin();
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    checkLoginStatus(context);
+    startNotice();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image(image: AssetImage('lib/client/assets/logoNoWord2.png')),
+            Text(
+              "Đang tải dữ liệu...",
+              style: TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 20),
+            CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class LoginUser extends StatefulWidget {
   const LoginUser({super.key});
@@ -15,6 +119,12 @@ class LoginUser extends StatefulWidget {
 class _LoginUserState extends State<LoginUser> {
   String email = "levodangkhoatg2@gmail.com";
   String phone = "0708103015";
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +164,8 @@ class _LoginUserState extends State<LoginUser> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                "XIN CHÀO,",
+              Text(
+                greeting,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 40,
@@ -75,8 +185,8 @@ class _LoginUserState extends State<LoginUser> {
                             email = value;
                           },
                           decoration: InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon:Icon(Icons.mail),
+                            labelText: emailField,
+                            prefixIcon: Icon(Icons.mail),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                               borderSide: BorderSide.none,
@@ -94,8 +204,8 @@ class _LoginUserState extends State<LoginUser> {
                             phone = value;
                           },
                           decoration: InputDecoration(
-                            labelText: 'Số điện thoại',
-                            prefixIcon:Icon(Icons.phone),
+                            labelText: phoneNumField,
+                            prefixIcon: Icon(Icons.phone),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                               borderSide: BorderSide.none,
@@ -119,28 +229,28 @@ class _LoginUserState extends State<LoginUser> {
                           ),
                           onPressed: () async {
                             showDialog<String>(
-                                context: context,
-                                builder: (BuildContext context) => const Dialog(
-                                        child: Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: <Widget>[
-                                          SizedBox(height: 15),
-                                          CircularProgressIndicator(),
-                                          SizedBox(height: 15),
-                                          Text('Đang gửi OTP tới Email'),
-                                          SizedBox(height: 15),
-                                        ],
-                                      ),
-                                    )));
+                              context: context,
+                              builder: (BuildContext context) => Dialog(
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: <Widget>[
+                                      SizedBox(height: 15),
+                                      CircularProgressIndicator(),
+                                      SizedBox(height: 15),
+                                      Text(sendingOTP),
+                                      SizedBox(height: 15),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
                             if (email == "" || phone == "") {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Bạn nhập thiếu gì rồi!')),
+                                SnackBar(content: Text(missingInfo)),
                               );
                               return;
                             }
@@ -162,12 +272,12 @@ class _LoginUserState extends State<LoginUser> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                     content: Text(
-                                        'Gửi OTP thất bại: ${result['message'] ?? "Lỗi web"}')),
+                                        '$errorSendingOTP ${result['message'] ?? "Lỗi web"}')),
                               );
                             }
                           },
-                          child: const Text(
-                            'XÁC MINH',
+                          child: Text(
+                            submit,
                             style: TextStyle(color: Colors.white),
                           ),
                         ),
@@ -188,18 +298,28 @@ class _LoginUserState extends State<LoginUser> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const LoginUserPass()),
+                                  builder: (context) => const Login()),
                             );
                           },
-                          child: const Text(
-                            'KHÁCH HÀNG DOANH NGHIỆP',
+                          child: Text(
+                            business,
                             style: TextStyle(color: Colors.white),
                           ),
                         ),
                       ),
                       const SizedBox(height: 20),
                       IconButton(
-                        onPressed: () => {},
+                        onPressed: () {
+                          setState(() {
+                            en = !en;
+                          });
+                          print(en);
+                          if (en) {
+                            toEnLanguage();
+                          } else {
+                            toViLanguage();
+                          }
+                        },
                         icon: const Icon(
                           Icons.language,
                           color: Colors.white,

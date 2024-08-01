@@ -345,7 +345,7 @@ class PartnerStaffOperation {
   Future<Map<String, dynamic>> getAuthenticatedPartnerStaffInfo() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/get_info'),
+        Uri.parse('$baseUrl/'),
         headers: {'Content-Type': 'application/json', 'Cookie' : cookie!},
       );
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../models/language.dart';
 import 'sender_receiver.dart';
 
 class OrderInfor extends StatefulWidget {
@@ -92,13 +93,13 @@ class _OrderInforState extends State<OrderInfor> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Thêm chi tiết",
+              Text(
+                hintAddDetails,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: widget.func,
-                child: const Text("Quay lại"),
+                child: Text(hintBack),
               ),
             ],
           ),
@@ -107,16 +108,16 @@ class _OrderInforState extends State<OrderInfor> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Tiền thu hộ (có thể để trống)',
+                Text(
+                  hintCollectMoney,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
                   controller: money,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: "Tiền thu hộ (vnd)",
+                  decoration: InputDecoration(
+                    labelText: hintCollectMoneyLabel,
                     border: OutlineInputBorder(),
                   ),
                   onChanged: (value) {
@@ -190,13 +191,13 @@ class _OrderInforState extends State<OrderInfor> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Khối lượng",
+                Text(
+                  hintWeight,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 weight.text == "0" && widget.clicked
-                    ? const Text(
-                        "Vui lòng nhập khối lượng",
+                    ? Text(
+                        hintPleaseEnterWeight,
                         style: TextStyle(color: Colors.red),
                       )
                     : Container(),
@@ -214,7 +215,7 @@ class _OrderInforState extends State<OrderInfor> {
                     }
                   },
                   decoration: InputDecoration(
-                    labelText: "Khối lượng (g)",
+                    labelText: hintWeightLabel,
                     border: const OutlineInputBorder(),
                     suffix: TextButton(
                       onPressed: () {
@@ -258,16 +259,16 @@ class _OrderInforState extends State<OrderInfor> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Kích thước",
+                Text(
+                  hintDimensions,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 (length.text == "0" ||
                             height.text == "0" ||
                             width.text == "0") &&
                         widget.clicked
-                    ? const Text(
-                        "Vui lòng nhập kích thước đầy đủ",
+                    ? Text(
+                        hintPleaseEnterDimensions,
                         style: TextStyle(color: Colors.red),
                       )
                     : Container(),
@@ -285,7 +286,7 @@ class _OrderInforState extends State<OrderInfor> {
                     }
                   },
                   decoration: InputDecoration(
-                    labelText: "Dài (cm)",
+                    labelText: hintLengthLabel,
                     border: const OutlineInputBorder(),
                     suffix: TextButton(
                       onPressed: () {
@@ -313,7 +314,8 @@ class _OrderInforState extends State<OrderInfor> {
                       child: const Text(
                         "-",
                         style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                            fontSize:
+20, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -327,12 +329,12 @@ class _OrderInforState extends State<OrderInfor> {
                   keyboardType: TextInputType.number,
                   onChanged: (value) {
                     int? val = int.tryParse(value);
-                    if(val != null){
+                    if (val != null) {
                       wid = val;
                     }
                   },
                   decoration: InputDecoration(
-                    labelText: "Rộng (cm)",
+                    labelText: hintWidthLabel,
                     border: const OutlineInputBorder(),
                     suffix: TextButton(
                       onPressed: () {
@@ -373,12 +375,12 @@ class _OrderInforState extends State<OrderInfor> {
                   keyboardType: TextInputType.number,
                   onChanged: (value) {
                     int? val = int.tryParse(value);
-                    if(val != null){
+                    if (val != null) {
                       hei = val;
                     }
                   },
                   decoration: InputDecoration(
-                    labelText: "Cao (cm)",
+                    labelText: hintHeightLabel,
                     border: const OutlineInputBorder(),
                     suffix: TextButton(
                       onPressed: () {
@@ -422,20 +424,20 @@ class _OrderInforState extends State<OrderInfor> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Loại hình vận chuyển',
+                Text(
+                  hintShippingMethod,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 _selectedMethod == null && widget.clicked
-                    ? const Text(
-                        "Vui lòng chọn loại hình",
+                    ? Text(
+                        hintPleaseSelectMethod,
                         style: TextStyle(color: Colors.red),
                       )
                     : Container(),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: _selectedMethod,
-                  hint: const Text('Chọn loại hình vận chuyển'),
+                  hint: Text(hintSelectShippingMethod),
                   items: _shippingMethods.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,

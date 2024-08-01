@@ -4,14 +4,85 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:logistics_app/delivery/bloc/driver_api.dart';
 import 'package:logistics_app/delivery/bloc/load.dart';
-import 'package:logistics_app/delivery/bloc/staff_shipper_api.dart';
-import 'package:logistics_app/delivery/models/order.dart';
+import 'package:logistics_app/delivery/bloc/noticefication.dart';
 import 'package:logistics_app/delivery/models/shipment.dart';
-import 'package:logistics_app/delivery/models/shipper.dart';
 import 'package:logistics_app/delivery/models/vehicle.dart';
 import 'package:logistics_app/delivery/view/driver/shipments.dart';
+import 'package:logistics_app/delivery/view/shipper/staff_information.dart';
+import 'package:logistics_app/delivery/widgets/drawer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../client/view/login/email_phone.dart';
 import '../models/current.dart';
-import 'shipper/orders.dart';
+import 'shipper/orders/orders.dart';
+
+Future<void> checkLoginStatus(BuildContext context) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? email = prefs.getString('email');
+  String? password = prefs.getString('password');
+  cookie = prefs.getString('cookie');
+  print(email);
+  print(password);
+  print(cookie);
+
+  if (email != null && password != null && cookie != null) {
+    bool rs = await loadAll(context);
+    if (!rs) return;
+    reload();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const StaffInfor()),
+    );
+  } else {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Login()),
+    );
+  }
+}
+
+Future<void> saveLoginInfo(String email, String password, String cookie) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('email', email);
+  await prefs.setString('password', password);
+  await prefs.setString('cookie', cookie);
+  print(email);
+  print(password);
+  print(cookie);
+}
+
+class SplashScreenDeli extends StatefulWidget {
+  @override
+  _SplashScreenDeliState createState() => _SplashScreenDeliState();
+}
+
+class _SplashScreenDeliState extends State<SplashScreenDeli> {
+  @override
+  void initState() {
+    super.initState();
+    startNotice();
+    checkLoginStatus(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image(image: AssetImage('lib/client/assets/logoNoWord2.png')),
+            Text(
+              "Đang tải dữ liệu...",
+              style: TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 20),
+            CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -52,7 +123,16 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.red,
-      body: Center(
+      body:
+          // Container(
+          //   decoration: BoxDecoration(
+          //     image: DecorationImage(
+          //       image: AssetImage('lib/client/assets/background.gif'),
+          //       fit: BoxFit.cover,
+          //     ),
+          //   ),
+          //   child:
+          Center(
         child: Column(
           children: [
             Container(
@@ -70,15 +150,6 @@ class _LoginState extends State<Login> {
                   child: Column(
                     children: [
                       Image.asset('lib/client/assets/logo.png', height: 75),
-                      // const SizedBox(height: 20),
-                      // const Text(
-                      //   'TD LOGISTICS',
-                      //   style: TextStyle(
-                      //     color: Colors.white,
-                      //     fontSize: 24,
-                      //     fontWeight: FontWeight.bold,
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),
@@ -250,51 +321,22 @@ class _LoginState extends State<Login> {
                                 await authOperation.login(username!, password!);
                             print(result);
                             if (result["error"] == false) {
-                              var info = await staffsOperation
-                                  .getAuthenticatedStaffInfo();
-                              if (info["data"] == null) {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(info["message"])),
-                                );
-                                return;
-                              }
-
-                              setState(() {
-                                shipper = Shipper.fromJson(info["data"]);
-                              });
-                              if (shipper.account!.role! != "SHIPPER") {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('Bạn không phải SHIPPER')),
-                                );
-                                return;
-                              }
-
-                              await loadHistory();
-                              await loadTasks();
-                              await loadAvatar();
-
-                              for(var i = 0; i < orders.length; i++){
-                                await loadImages(orders[i]);
-                              }
-                              for(var i = 0; i < history.length; i++){
-                                await loadImages(history[i]);
-                                print(history[i].receiveImgs);
-                              }
-
+                              await saveLoginInfo(
+                                  username!, password!, cookie!);
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                     backgroundColor: Colors.green,
                                     content: Text('Đăng nhập thành công')),
                               );
+                              bool rs = await loadAll(context);
+                              if (!rs) return;
+                              reload();
                               Navigator.pop(context);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => const OrderList()),
+                                    builder: (context) => const StaffInfor()),
                               );
                             } else {
                               Navigator.pop(context);
@@ -355,6 +397,30 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    SizedBox(
+                      width: 300,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.white),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                        ),
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LoginUser()),
+                          );
+                        },
+                        child: const Text(
+                          'QUAY LẠI',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

@@ -6,8 +6,10 @@ import 'package:logistics_app/client/models/cities.dart';
 import 'package:logistics_app/client/models/current.dart';
 import 'package:logistics_app/client/view/add%20order/confirm_order.dart';
 import 'package:logistics_app/client/widgets/ggmap_2_markers.dart';
+import '../../models/language.dart';
 import '../../widgets/drawer.dart';
 import '../../models/user.dart';
+import '../not_available.dart';
 import 'infor_form.dart';
 import 'sender_receiver.dart' as local;
 import 'order_infor.dart';
@@ -70,10 +72,6 @@ class _OrderFormState extends State<OrderForm> {
     ),
   );
 
-  final snackBarNotAvailable = const SnackBar(
-    content: Text('Tính năng này chưa khả dụng'),
-  );
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,7 +79,7 @@ class _OrderFormState extends State<OrderForm> {
       body: !isCollapsed
           ? SingleChildScrollView(
               child: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.white,
@@ -97,7 +95,8 @@ class _OrderFormState extends State<OrderForm> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.map, color: Colors.black),
+                                icon:
+                                    const Icon(Icons.map, color: Colors.black),
                                 onPressed: () {
                                   notCollapsed();
                                   setState(() {
@@ -105,16 +104,42 @@ class _OrderFormState extends State<OrderForm> {
                                   });
                                 },
                               ),
-                              Builder(
-                                builder: (context) {
-                                  return IconButton(
-                                    icon: const Icon(Icons.menu,
-                                        color: Colors.red),
-                                    onPressed: () {
-                                      Scaffold.of(context).openDrawer();
-                                    },
-                                  );
-                                },
+                              Container(
+                                decoration: BoxDecoration(
+                                    color: Color.fromARGB(255, 232, 232, 232),
+                                    borderRadius: BorderRadius.circular(15)),
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          en = !en;
+                                        });
+                                        print(en);
+                                        if (en) {
+                                          toEnLanguage();
+                                        } else {
+                                          toViLanguage();
+                                        }
+                                      },
+                                      icon: const Icon(
+                                        Icons.language,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                    Builder(
+                                      builder: (context) {
+                                        return IconButton(
+                                          icon: const Icon(Icons.menu,
+                                              color: Colors.red),
+                                          onPressed: () {
+                                            Scaffold.of(context).openDrawer();
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -141,8 +166,8 @@ class _OrderFormState extends State<OrderForm> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            const Text(
-                                              "Địa điểm",
+                                            Text(
+                                              title,
                                               style: TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold),
@@ -150,7 +175,7 @@ class _OrderFormState extends State<OrderForm> {
                                             const SizedBox(height: 5),
                                             Form(
                                               child: InforForm(
-                                                titlte: "Địa điểm lấy hàng",
+                                                titlte: senderLocation,
                                                 user: local.sender,
                                                 next: nextClicked,
                                               ),
@@ -158,7 +183,7 @@ class _OrderFormState extends State<OrderForm> {
                                             const SizedBox(height: 20),
                                             Form(
                                               child: InforForm(
-                                                titlte: "Địa điểm giao hàng",
+                                                titlte: receiverLocation,
                                                 user: local.receiver,
                                                 next: nextClicked,
                                               ),
@@ -170,11 +195,14 @@ class _OrderFormState extends State<OrderForm> {
                           const SizedBox(height: 10),
                           InkWell(
                             onTap: () {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(snackBarNotAvailable);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const NotAvai()),
+                              );
                             },
-                            child: const Text(
-                              "Chính sách đền bù",
+                            child: Text(
+                              policy,
                               style: TextStyle(
                                 color: Colors.red,
                                 decoration: TextDecoration.underline,
@@ -203,9 +231,9 @@ class _OrderFormState extends State<OrderForm> {
                                   if (!checkVaild(local.receiver) ||
                                       !checkVaild(local.sender)) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
+                                      SnackBar(
                                           content: Text(
-                                              'Vui lòng điền đầy đủ thông tin.')),
+                                              fillInfo)),
                                     );
                                     print(local.sender.longitude);
                                     return;
@@ -224,7 +252,7 @@ class _OrderFormState extends State<OrderForm> {
                                     showDialog<String>(
                                       context: context,
                                       builder: (BuildContext context) =>
-                                          const Dialog(
+                                          Dialog(
                                         child: Padding(
                                           padding: EdgeInsets.all(8.0),
                                           child: Column(
@@ -232,11 +260,11 @@ class _OrderFormState extends State<OrderForm> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
                                             children: <Widget>[
-                                              SizedBox(height: 15),
-                                              CircularProgressIndicator(),
-                                              SizedBox(height: 15),
-                                              Text('Đang tính toán chi phí'),
-                                              SizedBox(height: 15),
+                                              const SizedBox(height: 15),
+                                              const CircularProgressIndicator(),
+                                              const SizedBox(height: 15),
+                                              Text(calculatingFee),
+                                              const SizedBox(height: 15),
                                             ],
                                           ),
                                         ),
@@ -274,7 +302,10 @@ class _OrderFormState extends State<OrderForm> {
                                           .showSnackBar(SnackBar(
                                         backgroundColor: Colors.yellow,
                                         content: Text(
-                                          'Lỗi' + (feeCalcu.isNotEmpty?feeCalcu['error']:"Null"),
+                                          'Lỗi' +
+                                              (feeCalcu.isNotEmpty
+                                                  ? feeCalcu['error']
+                                                  : "Null"),
                                           style: TextStyle(color: Colors.black),
                                         ),
                                       ));
@@ -291,7 +322,7 @@ class _OrderFormState extends State<OrderForm> {
                                   showDialog<String>(
                                     context: context,
                                     builder: (BuildContext context) =>
-                                        const Dialog(
+                                        Dialog(
                                       child: Padding(
                                         padding: EdgeInsets.all(8.0),
                                         child: Column(
@@ -299,11 +330,11 @@ class _OrderFormState extends State<OrderForm> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: <Widget>[
-                                            SizedBox(height: 15),
-                                            CircularProgressIndicator(),
-                                            SizedBox(height: 15),
-                                            Text('Đang tạo đơn hàng'),
-                                            SizedBox(height: 15),
+                                            const SizedBox(height: 15),
+                                            const CircularProgressIndicator(),
+                                            const SizedBox(height: 15),
+                                            Text(createOrder),
+                                            const SizedBox(height: 15),
                                           ],
                                         ),
                                       ),
@@ -334,7 +365,7 @@ class _OrderFormState extends State<OrderForm> {
                                     height: local.hei,
                                     width: local.wid,
                                     mass: local.wei,
-                                    cod: local.mon.toDouble(),
+                                    cod: local.mon + local.fee,
                                     serviceType:
                                         local.sendingMethod!.split(": ")[0],
                                     latDestination: receivll?.latitude ?? 0.0,
@@ -342,11 +373,11 @@ class _OrderFormState extends State<OrderForm> {
                                     longDestination: receivll?.longitude ?? 0.0,
                                     longSource: senderll?.longitude ?? 0.0,
                                   );
-print(newOrder.cod);
+                                  print(newOrder.cod);
                                   Navigator.pop(context);
                                   var result = await ordersOperation
                                       .createByUser(newOrder);
-                                      await loadOrders();
+                                  await loadOrders();
                                   if (result["error"] == false) {
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(snackBar);
@@ -355,19 +386,20 @@ print(newOrder.cod);
                                         .showSnackBar(SnackBar(
                                       backgroundColor: Colors.yellow,
                                       content: Text(
-                                          'Thêm đơn hàng không thành công, ${result["message"]}',
+                                          '${addOrderFailure}, ${result["message"]}',
                                           style:
                                               TextStyle(color: Colors.black)),
                                     ));
                                   }
-                                  loadOrders();
+                                  await loadOrders();
                                   setState(() {
                                     currentPage = 0;
                                   });
                                 }
                               },
                               child: Text(
-                                currentPage == 2 ? "Xác nhận" : "Tiếp tục",
+                                currentPage == 2 ? submitOrder
+                                 : continueText,
                                 style: const TextStyle(color: Colors.white),
                               ),
                             ),

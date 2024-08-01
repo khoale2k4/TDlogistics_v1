@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:logistics_app/client/bloc/convertCurrency.dart';
+import '../../models/language.dart';
 import 'sender_receiver.dart';
 
 class ConfirmOrder extends StatefulWidget {
@@ -21,46 +23,46 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
             children: [
               TextButton(
                 onPressed: widget.func,
-                child: const Text("Quay lại"),
+                child: Text(hintBack),
               ),
             ],
           ),
           Center(
-            child: const Text(
-              "Xác nhận thông tin",
+            child: Text(
+              hintConfirmInfo,
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 10),
           Center(
-            child: const Text(
-              "Thông tin người gửi",
+            child: Text(
+              hintSenderInfo,
               style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
           ),
           Row(
             children: [
-              const Text(
-                "Họ tên: ",
+              Text(
+                hintFullName,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text(sender.name!, style: TextStyle(fontSize: 17))
+              Text(sender.name!, style: TextStyle(fontSize: 17)),
             ],
           ),
           Row(
             children: [
-              const Text(
-                "Số điện thoại: ",
+              Text(
+                hintPhoneNumber,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text(sender.phoneNum!, style: TextStyle(fontSize: 17))
+              Text(sender.phoneNum!, style: TextStyle(fontSize: 17)),
             ],
           ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Địa chỉ: ",
+              Text(
+                hintAddress,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Flexible(
@@ -75,34 +77,34 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
           ),
           const SizedBox(height: 10),
           Center(
-            child: const Text(
-              "Thông tin người nhận",
+            child: Text(
+              hintReceiverInfo,
               style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
           ),
           Row(
             children: [
-              const Text(
-                "Họ tên: ",
+              Text(
+                hintFullName,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text(receiver.name!, style: TextStyle(fontSize: 17))
+              Text(receiver.name!, style: TextStyle(fontSize: 17)),
             ],
           ),
           Row(
             children: [
-              const Text(
-                "Số điện thoại: ",
+              Text(
+                hintPhoneNumber,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text(receiver.phoneNum!, style: TextStyle(fontSize: 17))
+              Text(receiver.phoneNum!, style: TextStyle(fontSize: 17)),
             ],
           ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Địa chỉ: ",
+              Text(
+                hintAddress,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Flexible(
@@ -117,15 +119,15 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
           ),
           const SizedBox(height: 10),
           Center(
-            child: const Text(
-              "Thông tin đơn hàng",
+            child: Text(
+              hintOrderInfo,
               style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
           ),
           Row(
             children: [
-              const Text(
-                "Khối lượng: ",
+              Text(
+                hintWeight2,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(wei.toString() + " g", style: TextStyle(fontSize: 17)),
@@ -133,8 +135,8 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
           ),
           Row(
             children: [
-              const Text(
-                "Chiều dài: ",
+              Text(
+                hintLength,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(len.toString() + " cm", style: TextStyle(fontSize: 17)),
@@ -142,8 +144,8 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
           ),
           Row(
             children: [
-              const Text(
-                "Chiều rộng: ",
+              Text(
+                hintWidth,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(wid.toString() + " cm", style: TextStyle(fontSize: 17)),
@@ -151,8 +153,8 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
           ),
           Row(
             children: [
-              const Text(
-                "Chiều cao: ",
+              Text(
+                hintHeight,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(hei.toString() + " cm", style: TextStyle(fontSize: 17)),
@@ -160,26 +162,26 @@ class _ConfirmOrderState extends State<ConfirmOrder> {
           ),
           Row(
             children: [
-              const Text(
-                "Chi phí vận chuyển: ",
+              Text(
+                hintShippingCost,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text(fee.toString() + " VNĐ", style: TextStyle(fontSize: 17)),
+              Text(formatCurrency(fee.toDouble()), style: TextStyle(fontSize: 17)),
             ],
           ),
           Row(
             children: [
-              const Text(
-                "COD: ",
+              Text(
+                hintCOD,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text(mon.toString() + " VNĐ", style: TextStyle(fontSize: 17)),
+              Text(formatCurrency(mon.toDouble() + fee.toDouble()), style: TextStyle(fontSize: 17)),
             ],
           ),
           Row(
             children: [
-              const Text(
-                "Phương thức vận chuyển: ",
+              Text(
+                hintShippingMethod2,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(

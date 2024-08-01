@@ -178,6 +178,7 @@ class UpdatingOrderInfo {
   double? length;
   double? cod;
   int? statusCode;
+  int? taskId;
 
   UpdatingOrderInfo(
       {this.mass,
@@ -185,7 +186,8 @@ class UpdatingOrderInfo {
       this.width,
       this.length,
       this.cod,
-      this.statusCode});
+      this.statusCode,
+      this.taskId});
 }
 
 class CancelingOrderCondition {
@@ -249,14 +251,13 @@ class OrdersOperation {
       'Content-Type': 'application/json; charset=utf-8',
       "Cookie": cookie ?? ""
     };
-
+    var body = {};
     try {
       final response =
-          await http.post(uri, headers: headers, body: jsonEncode({}));
+          await http.post(uri, headers: headers, body: jsonEncode(body));
 
-    final decodedResponse = utf8.decode(response.bodyBytes);
-    final respon = json.decode(decodedResponse);
-      print(respon["data"]);
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final respon = json.decode(decodedResponse);
       if (response.statusCode == 400) {
         return {"error": true, "message": response.body};
       }
@@ -313,6 +314,7 @@ class OrdersOperation {
     var headers = {'Content-Type': 'application/json', "Cookie": cookie!};
 
     try {
+      print(uri);
       final response = await http.post(
         uri,
         headers: headers,
@@ -320,17 +322,15 @@ class OrdersOperation {
       );
 
       print(json.encode(info));
-      final data = json.decode(response.body);
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final data = json.decode(decodedResponse);
+      print(data);
 
-      if (data["error"]) {
-        return {
-          'error': data['error'],
-          'data': data['data'],
-          'message': data['message']
-        };
-      }
-
-      return {'error': data['error'], 'message': data['message']};
+      return {
+        'error': data['error'],
+        'data': data['data'],
+        'message': data['message'],
+      };
     } catch (error) {
       return {"error": true, "message": error.toString()};
     }
@@ -346,16 +346,29 @@ class OrdersOperation {
         headers: headers,
         body: jsonEncode(
           {
-            "order_id": condition.orderId,
+            "taskId": info.taskId,
+            "orderId": condition.orderId,
             "height": info.height,
             "width": info.width,
             "length": info.length,
             "mass": info.mass,
             "cod": info.cod,
-            "status_code": info.statusCode
+            // "status_code": info.statusCode
           },
         ),
       );
+      print(jsonEncode(
+          {
+            "taskId": info.taskId,
+            "orderId": condition.orderId,
+            "height": info.height,
+            "width": info.width,
+            "length": info.length,
+            "mass": info.mass,
+            "cod": info.cod,
+            // "status_code": info.statusCode
+          },
+        ),);
       var data = jsonDecode(response.body);
       return {
         'error': data['error'],
@@ -368,94 +381,20 @@ class OrdersOperation {
     }
   }
 
-  Future<Map<String, dynamic>> cancel(
-      CancelingOrderCondition condition) async {
+  Future<Map<String, dynamic>> cancel(CancelingOrderCondition condition) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/cancel?orderId=${condition.orderId}'),
-        headers: {"Cookie" : cookie!}
-      );
-      
-    final decodedResponse = utf8.decode(response.bodyBytes);
-    final data = json.decode(decodedResponse);
-      return {
-        'error': data['error'],
-        'message': data['message']
-      };
+          Uri.parse('$baseUrl/cancel?orderId=${condition.orderId}'),
+          headers: {"Cookie": cookie!});
+
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final data = json.decode(decodedResponse);
+      print(data);
+      return {'error': data['error'], 'message': data['message']};
     } catch (e) {
       print('Error canceling order: $e');
       return {'error': e.toString()};
     }
-  }
-}
-
-extension on CreatingOrderByUserInformation {
-  Map<String, dynamic> toJson() {
-    return {
-      'name_sender': nameSender,
-      'name_receiver': nameReceiver,
-      'phone_number_receiver': phoneNumberReceiver,
-      'mass': mass,
-      'height': height,
-      'width': width,
-      'length': length,
-      'province_source': provinceSource,
-      'district_source': districtSource,
-      'ward_source': wardSource,
-      'detail_source': detailSource,
-      'province_dest': provinceDest,
-      'district_dest': districtDest,
-      'ward_dest': wardDest,
-      'detail_dest': detailDest,
-      'long_source': longSource,
-      'lat_source': latSource,
-      'long_destination': longDestination,
-      'lat_destination': latDestination,
-      'COD': cod,
-      'service_type': serviceType
-    };
-  }
-}
-
-extension on CreatingOrderByAdminAndAgencyInformation {
-  Map<String, dynamic> toJson() {
-    return {
-      'name_sender': nameSender,
-      'phone_number_sender': phoneNumberSender,
-      'name_receiver': nameReceiver,
-      'phone_number_receiver': phoneNumberReceiver,
-      'mass': mass,
-      'height': height,
-      'width': width,
-      'length': length,
-      'province_source': provinceSource,
-      'district_source': districtSource,
-      'ward_source': wardSource,
-      'detail_source': detailSource,
-      'province_dest': provinceDest,
-      'district_dest': districtDest,
-      'ward_dest': wardDest,
-      'detail_dest': detailDest,
-      'long_source': longSource,
-      'lat_source': latSource,
-      'long_destination': longDestination,
-      'lat_destination': latDestination,
-      'COD': cod,
-      'service_type': serviceType
-    };
-  }
-}
-
-extension on UpdatingOrderInfo {
-  Map<String, dynamic> toJson() {
-    return {
-      'mass': mass,
-      'height': height,
-      'width': width,
-      'length': length,
-      'COD': cod,
-      'status_code': statusCode
-    };
   }
 }
 

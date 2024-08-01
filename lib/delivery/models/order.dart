@@ -38,8 +38,8 @@ class Order {
     List<dynamic>? receiveImages;
     dynamic sendSignature;
     dynamic receiveSignature;
-    List<Uint8List>? sendImgs = [];
-    List<Uint8List>? receiveImgs = [];
+    List<Uint8List> sendImgs = [];
+    List<Uint8List> receiveImgs = [];
     Uint8List? sendSig = Uint8List.fromList([]);
     Uint8List? receiveSig = Uint8List.fromList([]);
     dynamic qrcode;
@@ -83,16 +83,19 @@ class Order {
         shipper = json["shipper"];
         statusCode = json["statusCode"];
         miss = json["miss"];
-        print(json["sendImages"]);
-        sendImages = json["sendImages"];
-        receiveImages = json["receiveImages"];
+        sendImages = json["sendImages"]??[];
+        receiveImages = json["receiveImages"]??[];
         sendSignature = json["sendSignature"];
         receiveSignature = json["receiveSignature"];
         qrcode = json["qrcode"];
         signature = json["signature"];
         paid = json["paid"];
-        createdAt = json["createdAt"];
-        lastUpdate = json["lastUpdate"];
+    createdAt = json["createdAt"] != null
+        ? DateTime.fromMillisecondsSinceEpoch(json["createdAt"]).toString()
+        : null;
+    lastUpdate = json["lastUpdate"] != null
+        ? DateTime.fromMillisecondsSinceEpoch(json["lastUpdate"]).toString()
+        : null;
         orderCode = json["orderCode"];
     }
 

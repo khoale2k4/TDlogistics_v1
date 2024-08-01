@@ -2,10 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:logistics_app/delivery/view/driver/partner_staff_information.dart';
 import 'package:logistics_app/delivery/view/driver/shipments.dart';
 import 'package:logistics_app/delivery/view/shipper/staff_information.dart';
+import 'package:logistics_app/delivery/view/shipper/tasks/tasks.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/current.dart';
-import '../view/shipper/orders.dart';
+import '../view/shipper/orders/orders.dart';
 import '../view/shipper/history.dart';
 import '../view/login.dart';
+
+Future<void> logoutCleanEmail() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.remove('email');
+  await prefs.remove('password');
+  await prefs.remove('cookie');
+}
 
 class MyDrawer extends StatefulWidget {
   final bool isStaff;
@@ -52,16 +61,14 @@ class _MyDrawerState extends State<MyDrawer> {
                             color: Colors.red),
                         child: TextButton(
                           style: ButtonStyle(),
-                          onPressed: () {
+                          onPressed: () async {
+                            socket?.disconnect();
+                            await logoutCleanEmail();
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                   builder: (context) => const Login()),
                             );
-                            setState(() {
-                              orders.clear();
-                              vehicles.clear();
-                            });
                           },
                           child: const Text(
                             "Xác nhận",
@@ -89,11 +96,10 @@ class _MyDrawerState extends State<MyDrawer> {
           Column(
             children: [
               Container(
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                ),
-              height: 50
-                ),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                  ),
+                  height: 50),
               Container(
                 decoration: const BoxDecoration(
                   color: Colors.red,
@@ -106,6 +112,25 @@ class _MyDrawerState extends State<MyDrawer> {
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
+                ),
+              ),
+              UserAccountsDrawerHeader(
+                accountName: Text(
+                  shipper.fullname ?? "Chưa có thông tin",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                accountEmail: Text(
+                  shipper.account!.email ?? "Chưa có thông tin",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                currentAccountPicture: CircleAvatar(
+                  backgroundImage: imageBytes != null
+                      ? MemoryImage(imageBytes!)
+                      : const AssetImage("lib/client/assets/avt.jpg")
+                          as ImageProvider,
+                ),
+                decoration: const BoxDecoration(
+                  image: DecorationImage(fit: BoxFit.fill,image: AssetImage('lib/client/assets/pro_back.jpg'),),
                 ),
               ),
               ListTile(
@@ -149,6 +174,20 @@ class _MyDrawerState extends State<MyDrawer> {
                       },
                     )
                   : Container(),
+                  widget.isStaff?
+              ListTile(
+                leading:
+                    const Icon(Icons.notifications_none, color: Colors.red),
+                title: const Text('Công việc'),
+                trailing: Text(avaiTasks.length.toString(), style: TextStyle(fontSize: 18, color: Colors.red),),
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AvailableTasks(),),
+                  );
+                },
+              ):Container()
             ],
           ),
           Column(

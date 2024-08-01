@@ -6,10 +6,10 @@ Future<void> loadOrders() async {
   var orderHistory = (await ordersOperation.get());
 
   if (orderHistory.isNotEmpty && orderHistory["data"] != null) {
-    for (int i = 0; i < orderHistory["data"].length; i++) {
-      Order ord = Order();
-      ord.fromJson(orderHistory["data"][i]);
+    for (int i = orderHistory["data"].length - 1; i >= 0; i--) {
+      if(orderHistory["data"][i]["userId"] != user.id) continue;
+      Order ord = Order.fromJson(orderHistory["data"][i]);
       orders.add(ord);
-    }
+    } 
   }
 }

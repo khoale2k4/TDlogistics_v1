@@ -9,8 +9,11 @@ import 'package:logistics_app/delivery/bloc/shipment_api.dart';
 import 'package:logistics_app/delivery/bloc/orders_operation.dart';
 import 'package:logistics_app/delivery/models/driver.dart';
 import 'package:logistics_app/delivery/models/order.dart';
+import 'package:logistics_app/delivery/models/request.dart';
 import 'package:logistics_app/delivery/models/shipper.dart';
 import 'package:logistics_app/delivery/models/vehicle.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:web_socket_channel/io.dart';
 
 AuthOperation authOperation = AuthOperation();
 
@@ -24,14 +27,15 @@ Order order = Order(
   longSource: 105.8341598,
   latDestination: 15.8800584,
   longDestination: 108.3380469,
-  provinceSource: "Thành phố Hà Nội",
-  districtSource: "",
-  wardSource: "",
-  detailSource: "",
-  provinceDest: "Thành phố HCM",
-  districtDest: "",
-  wardDest: "",
-  detailDest: "",
+  provinceSource: "Thành phố Hồ Chí Minh",
+  districtSource: "Quận 1",
+  wardSource: "Phường Phạm Ngũ Lão",
+  detailSource: "31",
+  provinceDest: "Thành phố Hồ Chí Minh",
+  districtDest: "Quận 1",
+  wardDest: "Phường Phạm Ngũ Lão",
+  detailDest: "13",
+  serviceType: "TTK",
   mass: 0,
   height: 0,
   width: 0,
@@ -41,8 +45,10 @@ Order order = Order(
   fee: 10000
 );
 List<Order> history = [];
-List<Order> orders = [];
+List<Order> orders = [order];
+List<Request> avaiTasks = [];
 List<Vehicle> vehicles = [];
+IO.Socket? socket;
 
 String? cookie;
 Uint8List? imageBytes;
@@ -57,6 +63,8 @@ PartnerStaffOperation partnerStaffOperation = PartnerStaffOperation();
 VehicleOperation vehicleOperation = VehicleOperation();
 ShipmentsOperation shipmentsOperation = ShipmentsOperation();
 OrdersOperation ordersOperation = OrdersOperation();
+
+IOWebSocketChannel? channel;
 
 const statusCode = {
   1: "Giao hàng thành công.",

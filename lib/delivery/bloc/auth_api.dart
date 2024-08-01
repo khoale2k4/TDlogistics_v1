@@ -24,7 +24,6 @@ class AuthOperation {
       if (response.headers['set-cookie'] != null) {
         cookie = response.headers['set-cookie'];
       }
-      print(cookie);
       return {
         'error': data['error'],
         'data': data['data'],

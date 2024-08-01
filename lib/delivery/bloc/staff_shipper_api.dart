@@ -17,7 +17,6 @@ class StaffsOperation {
 
   Future<Map<String, dynamic>> getAuthenticatedStaffInfo() async {
     try {
-      print(cookie);
       final response = await http.get(
         Uri.parse('$baseUrl/'),
         headers: {'Cookie': cookie!},

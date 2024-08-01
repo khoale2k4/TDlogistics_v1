@@ -1,11 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:logistics_app/delivery/models/order.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
-
 class GGMapDirection extends StatefulWidget {
   final Order order;
   final Function() retur;
@@ -20,6 +19,35 @@ class GGMapDirection extends StatefulWidget {
 }
 
 class _GGMapDirectionState extends State<GGMapDirection> {
+  final String host = '192.168.1.3'; // Địa chỉ IP của thiết bị chạy server
+  final int port = 8080;
+  Socket? socket;
+
+  void connectSocket() async {
+    try {
+      // Tạo kết nối đến server
+      socket = await Socket.connect(host, port);
+      print(
+          'Connected to: ${socket!.remoteAddress.address}:${socket!.remotePort}');
+
+      // Gửi dữ liệu đến server
+      socket!.write('Hello, server from dart!\n');
+
+      // Lắng nghe dữ liệu từ server
+      socket!.listen((List<int> data) {
+        print(String.fromCharCodes(data));
+      }, onDone: () {
+        print('Disconnected from server');
+        socket!.destroy();
+      }, onError: (error) {
+        print('Error: $error');
+        socket!.destroy();
+      });
+    } catch (e) {
+      print('Unable to connect: $e');
+    }
+  }
+
   LatLng? _location1;
   LatLng? _location2;
   String add1 = "";
@@ -135,9 +163,11 @@ class _GGMapDirectionState extends State<GGMapDirection> {
   }
 
   void _onMapCreated(GoogleMapController controller) {
-    _location1 = LatLng(widget.order.latSource!, widget.order.longSource!);
+    // connectSocket();
+    _location1 = LatLng(widget.order.latSource??0, widget.order.longSource ??0);
     _location2 =
-        LatLng(widget.order.latDestination!, widget.order.longDestination!);
+        LatLng(widget.order.latDestination??0, widget.order.longDestination??0);
+        print(_location1!);
     List<String> adds = addressConvert(widget.order);
     add1 = adds[0];
     add2 = adds[1];
@@ -212,11 +242,11 @@ class _GGMapDirectionState extends State<GGMapDirection> {
   LatLng current = LatLng(0, 0);
 
   void _getCurrentLocation() {
+    print("smth");
     Geolocator.getPositionStream().listen((Position position) {
       if (mounted)
         setState(() {
-          current = 
-              LatLng(position.latitude, position.longitude);
+          current = LatLng(position.latitude, position.longitude);
         });
     });
   }
@@ -308,7 +338,8 @@ class _GGMapDirectionState extends State<GGMapDirection> {
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.location_on, size: 36.0, color: Colors.black),
+              icon: const Icon(Icons.location_on,
+                  size: 36.0, color: Colors.black),
               onPressed: () {
                 mapController.animateCamera(CameraUpdate.newLatLng(current));
               },

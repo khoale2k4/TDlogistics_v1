@@ -1,18 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:logistics_app/client/view/add%20order/add_order.dart';
-import 'package:logistics_app/client/view/customer_information.dart';
-import 'package:logistics_app/client/view/history.dart';
-import 'package:logistics_app/delivery/widgets/qr_scanner.dart';
+import 'package:logistics_app/delivery/bloc/noticefication.dart' as delivery;
+import 'package:logistics_app/client/bloc/noticefication.dart' as client;
+// import 'package:logistics_app/client/view/add%20order/add_order.dart';
+// import 'package:logistics_app/client/view/customer_information.dart';
+// import 'package:logistics_app/client/view/history.dart';
+// import 'package:logistics_app/delivery/widgets/qr_scanner.dart';
 // import 'package:logistics_app/client/view/login/email_validation.dart';
 import 'client/view/login/email_phone.dart';
 // import 'client/view/add order/add_order.dart';
 // import 'client/view/customer_information.dart';
 import 'delivery/view/login.dart';
-import 'client/widgets/ggmap_2_markers.dart';
-import 'delivery/widgets/ggmap_direction.dart';
+// import 'client/widgets/ggmap_2_markers.dart';
+// import 'delivery/widgets/ggmap_direction.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ClientApp());
+}
+
+class ClientApp extends StatelessWidget {
+  const ClientApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      navigatorKey: client.navigatorKey,
+      home: 
+      SplashScreen(),
+    );
+  }
+}
+
+class DeliveryApp extends StatelessWidget {
+  const DeliveryApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      navigatorKey: delivery.navigatorKey,
+      home: 
+      SplashScreenDeli(),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -23,8 +53,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: 
+        SplashScreenDeli()
         // Login(),
-        LoginUser(),
+        // LoginUser(),
         // History(),
         // Infor(),
         // QRViewExample(),
@@ -38,9 +69,9 @@ class MyApp extends StatelessWidget {
         // )
         // ),
         // home: Scaffold(body: 
-        //   GGMap2Marker(
+        //   GGMap2Marker(i 
         //     add1: "123, Phuong Pham Ngu Lao, Quan 1, Thanh pho Ho Chi Minh", 
-        //     add2:"321, Phuong Pham Ngu Lao, Quan 1, Thanh pho Ho Chi Minh"
+        //     add2: "321, Phuong Pham Ngu Lao, Quan 1, Thanh pho Ho Chi Minh"
         //   )
         // ),
     );

@@ -22,12 +22,17 @@ class _StaffInforState extends State<StaffInfor> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: const MyDrawer(),
-      body: Stack(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height - 30,
-            child:  Center(
-                
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('lib/client/assets/background.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Stack(
+          children: [
+            SizedBox(
+              child: Center(
                 child: Column(
                   children: [
                     const SizedBox(
@@ -52,10 +57,9 @@ class _StaffInforState extends State<StaffInfor> {
                       width: MediaQuery.of(context).size.width - 80,
                       height: MediaQuery.of(context).size.height - 360,
                       decoration: BoxDecoration(
-                        border: Border.all(width: 1, color: Colors.grey),
-                        borderRadius: BorderRadius.circular(10),
-                        color:Colors.white
-                      ),
+                          border: Border.all(width: 1, color: Colors.grey),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white),
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
@@ -66,12 +70,6 @@ class _StaffInforState extends State<StaffInfor> {
                                 title: "Mã nhân viên",
                                 info: (shipper.staffId ?? "Chưa có thông tin")
                                     .toString()),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                                title: "Vị trí",
-                                info: shipper.position.toString()),
                             const SizedBox(
                               height: 20,
                             ),
@@ -142,28 +140,26 @@ class _StaffInforState extends State<StaffInfor> {
                         ),
                       ),
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ),
                   ],
                 ),
               ),
-          ),
-          Positioned(
-            top: 40,
-            right: 20,
-            child: Builder(
-              builder: (context) {
-                return IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.red),
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                );
-              },
             ),
-          ),
-        ],
+            Positioned(
+              top: 40,
+              right: 20,
+              child: Builder(
+                builder: (context) {
+                  return IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.red),
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

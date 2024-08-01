@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:logistics_app/client/bloc/load_orders.dart';
+import 'package:logistics_app/client/bloc/socket.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../bloc/load_user_infor.dart';
+import '../../models/language.dart';
 import '../customer_information.dart';
 import '../../models/current.dart';
 import '../../models/cities.dart';
@@ -18,6 +21,13 @@ class EmailValidation extends StatefulWidget {
 
 class _EmailValidationState extends State<EmailValidation> {
   TextEditingController _pinCodeController = TextEditingController();
+
+  Future<void> saveLoginInfo(String email, String phoneNumber, String cookie) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', email);
+    await prefs.setString('phoneNumber', phoneNumber);
+    await prefs.setString('cookie', cookie);
+  }
 
   void loadingData() {
     showDialog<String>(
@@ -76,8 +86,8 @@ class _EmailValidationState extends State<EmailValidation> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Nhập mã xác minh",
+            Text(
+              enterOTP,
               style: TextStyle(fontSize: 30, color: Colors.white),
             ),
             Padding(
@@ -131,8 +141,11 @@ class _EmailValidationState extends State<EmailValidation> {
                         print(result);
 
                         if (result['error'] == "No error") {
-                          await loadOrders();
                           await loadUserInfor();
+                          print("ID: "+ user.id!);
+                          await loadOrders();
+                          connectSocket();
+                          await saveLoginInfo(widget.email, widget.phoneNum, cookie!);
 
                           Navigator.pop(context);
                           Navigator.push(
@@ -143,14 +156,14 @@ class _EmailValidationState extends State<EmailValidation> {
                         } else {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                                 content: Text(
-                                    'Sai OTP. Vui lòng kiểm tra lại Email!')),
+                                    wrongOTP)),
                           );
                         }
                       },
-                      child: const Text(
-                        'XÁC NHẬN',
+                      child: Text(
+                        confirm,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -172,12 +185,31 @@ class _EmailValidationState extends State<EmailValidation> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: const Text(
-                        'QUAY LẠI',
+                      child: Text(
+                        turnBack,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
+                      const SizedBox(height: 20),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            en = !en;
+                          });
+                          print(en);
+                          if(en){
+                            toEnLanguage();
+                          }
+                          else{
+                            toViLanguage();
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.language,
+                          color: Colors.white,
+                        ),
+                      ),
                 ],
               ),
             ),

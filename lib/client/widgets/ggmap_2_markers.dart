@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:logistics_app/client/models/current.dart';
@@ -208,27 +210,27 @@ class _GGMap2MarkerState extends State<GGMap2Marker> {
             ),
           ),
         ),
-          Positioned(
-            bottom: 20,
-            right: 15,
-            child: Column(
-              children: [
-                FloatingActionButton(
-                  onPressed: _zoomIn,
-                  materialTapTargetSize: MaterialTapTargetSize.padded,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.zoom_in, size: 36.0),
-                ),
-                SizedBox(height: 10),
-                FloatingActionButton(
-                  onPressed: _zoomOut,
-                  materialTapTargetSize: MaterialTapTargetSize.padded,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.zoom_out, size: 36.0),
-                ),
-              ],
-            ),
+        Positioned(
+          bottom: 20,
+          right: 15,
+          child: Column(
+            children: [
+              FloatingActionButton(
+                onPressed: _zoomIn,
+                materialTapTargetSize: MaterialTapTargetSize.padded,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.zoom_in, size: 36.0),
+              ),
+              SizedBox(height: 10),
+              FloatingActionButton(
+                onPressed: _zoomOut,
+                materialTapTargetSize: MaterialTapTargetSize.padded,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.zoom_out, size: 36.0),
+              ),
+            ],
           ),
+        ),
         isExpanded
             ? Positioned(
                 top: 100,
@@ -251,26 +253,44 @@ class _GGMap2MarkerState extends State<GGMap2Marker> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.place, color: Colors.blue, size: 50),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text('Điểm gửi: ${widget.add1}',
-                                style: TextStyle(fontSize: 20)),
-                          ),
-                        ],
+                      InkWell(
+                        onTap: () {
+                          _location1 != null
+                              ? mapController.animateCamera(
+                                  CameraUpdate.newLatLng(
+                                      _location1 ?? LatLng(0, 0)))
+                              : print("ok");
+                        },
+                        child: Row(
+                          children: [
+                            Icon(Icons.place, color: Colors.blue, size: 50),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text('Điểm gửi: ${widget.add1}',
+                                  style: TextStyle(fontSize: 20)),
+                            ),
+                          ],
+                        ),
                       ),
                       SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Icon(Icons.place, color: Colors.red, size: 50),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text('Điểm nhận: ${widget.add2}',
-                                style: TextStyle(fontSize: 20)),
-                          ),
-                        ],
+                      InkWell(
+                        onTap: () {
+                          _location2 != null
+                              ? mapController.animateCamera(
+                                  CameraUpdate.newLatLng(
+                                      _location2 ?? LatLng(0, 0)))
+                              : print("ok");
+                        },
+                        child: Row(
+                          children: [
+                            Icon(Icons.place, color: Colors.red, size: 50),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text('Điểm nhận: ${widget.add2}',
+                                  style: TextStyle(fontSize: 20)),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

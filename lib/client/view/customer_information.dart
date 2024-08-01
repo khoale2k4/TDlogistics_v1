@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logistics_app/client/bloc/api_customer.dart';
+import '../models/language.dart';
 import '../widgets/drawer.dart';
 import '../models/current.dart';
 
@@ -16,6 +17,7 @@ class Infor extends StatefulWidget {
 
 class _InforState extends State<Infor> {
   bool editing = false;
+  bool updating = false;
 
   void setProvince(String str) {
     if (str == "") return;
@@ -57,7 +59,7 @@ class _InforState extends State<Infor> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Chọn nguồn ảnh'),
+          title: Text(imageSource),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -66,7 +68,8 @@ class _InforState extends State<Infor> {
               child: Row(
                 children: [
                   Icon(Icons.camera),
-                  Text('  Máy ảnh'),
+                  const SizedBox(width: 10),
+                  Text(camera),
                 ],
               ),
             ),
@@ -77,7 +80,8 @@ class _InforState extends State<Infor> {
               child: Row(
                 children: [
                   Icon(Icons.photo),
-                  Text('  Thư viện'),
+                  const SizedBox(width: 10),
+                  Text(gallery),
                 ],
               ),
             ),
@@ -88,7 +92,7 @@ class _InforState extends State<Infor> {
                   onPressed: () {
                     Navigator.of(context).pop('Null');
                   },
-                  child: Text("Đóng"),
+                  child: Text(close),
                 ),
               ],
             ),
@@ -118,17 +122,17 @@ class _InforState extends State<Infor> {
             await customerOperation.updateAvatar(updatingUserAvatarInfo);
         if (response['error'] != 'false') {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi: ${response['message']}')),
+            SnackBar(content: Text('$error ${response['message']}')),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cập nhật ảnh đại diện thành công')),
+            SnackBar(content: Text(successUploadImage)),
           );
         }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Có lỗi xảy ra: $e')),
+        SnackBar(content: Text('$error $e')),
       );
     }
   }
@@ -137,268 +141,322 @@ class _InforState extends State<Infor> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: const MyDrawer(),
-      body: Stack(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 50,
-                    ),
-                    Text(
-                      user.role!,
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: CircleAvatar(
-                        radius: 100,
-                        backgroundImage: imageBytes != null
-                            ? MemoryImage(imageBytes!)
-                            : const AssetImage("lib/client/assets/avt.jpg")
-                                as ImageProvider,
-                        child: const Align(
-                          alignment: Alignment.bottomRight,
-                          child: Icon(
-                            Icons.camera_alt,
-                            color: Colors.grey,
-                            size: 40,
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('lib/client/assets/background.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Stack(
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height,
+              child: SingleChildScrollView(
+                child: Center(
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 50,
+                      ),
+                      Text(
+                        user.role!,
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          radius: 100,
+                          backgroundImage: imageBytes != null
+                              ? MemoryImage(imageBytes!)
+                              : const AssetImage("lib/client/assets/avt.jpg")
+                                  as ImageProvider,
+                          child: const Align(
+                            alignment: Alignment.bottomRight,
+                            child: Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 40,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Container(
-                      width: MediaQuery.of(context).size.width - 80,
-                      height: MediaQuery.of(context).size.height -
-                          (editing ? 450 : 390),
-                      decoration: BoxDecoration(
-                        border: Border.all(width: 1, color: Colors.grey),
-                        borderRadius: BorderRadius.circular(10),
+                      const SizedBox(
+                        height: 20,
                       ),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(title: "Mã người dùng", info: user.id!),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                              title: "Họ và tên",
-                              info: user.name ?? "Chưa có thông tin",
-                              func: setName,
-                              edit: editing,
-                              initText: user.name,
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                                title: "Số điện thoại", info: user.phoneNum!),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                              title: "Email",
-                              info: user.email ?? "Chưa có thông tin",
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                              title: "Tỉnh/Thành phố",
-                              info: user.city ?? "Chưa có thông tin",
-                              func: setProvince,
-                              edit: editing,
-                              initText: user.city,
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                              title: "Quận/Huyện",
-                              info: user.district ?? "Chưa có thông tin",
-                              func: setDistrict,
-                              edit: editing,
-                              initText: user.district,
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                              title: "Phường/Xã",
-                              info: user.ward ?? "Chưa có thông tin",
-                              func: setWard,
-                              edit: editing,
-                              initText: user.ward,
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
-                              title: "Địa chỉ chi tiết",
-                              info: user.address ?? "Chưa có thông tin",
-                              func: setAddress,
-                              edit: editing,
-                              initText: user.address,
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Container(
-                      width: MediaQuery.of(context).size.width - 40,
-                      decoration: BoxDecoration(
-                        border: Border.all(width: 1, color: Colors.green),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextButton(
-                        onPressed: () async {
-                          if (editing) {
-                            UpdatingCustomerParams params =
-                                UpdatingCustomerParams(customerId: user.id!);
-                            UpdatingCustomerPayload payload =
-                                UpdatingCustomerPayload(
-                              detailAddress: user.address,
-                              district: user.district,
-                              fullname: user.name,
-                              province: user.city,
-                              ward: user.ward,
-                            );
-
-                            var update = await customerOperation.updateInfo(
-                                params, payload);
-                            print(update);
-                            if (update["error"] != "No error") {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text('Không thể cập nhật thông tin')),
-                              );
-                            } else {
-                              setState(() {
-                                user.id = update['data']['id'];
-                                user.name = update['data']['fullname'];
-                                user.city = update['data']['province'];
-                                user.district = update['data']['district'];
-                                user.ward = update['data']['ward'];
-                                user.address = update['data']['detailAddress'];
-                                user.email = update['data']["account"]['email'];
-                                user.phoneNum =
-                                    update['data']["account"]['phoneNumber'];
-                                user.role = update['data']["account"]['role'];
-                                user.detail = null;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text('Cập nhật thông tin thành công')),
-                              );
-                            }
-                          }
-                          setState(() {
-                            editing = !editing;
-                          });
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.edit,
-                              color: Colors.green,
-                            ),
-                            Text(
-                              editing ? "Lưu" : "Chỉnh sửa",
-                              style: const TextStyle(color: Colors.green),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    editing
-                        ? Container(
-                            width: MediaQuery.of(context).size.width - 40,
-                            decoration: BoxDecoration(
-                              border: Border.all(width: 1, color: Colors.red),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: TextButton(
-                              onPressed: () async {
-                                setState(() {
-                                  editing = !editing;
-                                });
-
-                                var infor = await customerOperation
-                                    .getAuthenticatedCustomerInfo();
-
-                                setState(() {
-                                  user.id = infor['data']['id'];
-                                  user.name = infor['data']['fullname'];
-                                  user.city = infor['data']['province'];
-                                  user.district = infor['data']['district'];
-                                  user.ward = infor['data']['ward'];
-                                  user.address = infor['data']['detailAddress'];
-                                  user.email =
-                                      infor['data']["account"]['email'];
-                                  user.phoneNum =
-                                      infor['data']["account"]['phoneNumber'];
-                                  user.role = infor['data']["account"]['role'];
-                                  user.detail = null;
-                                });
-                              },
-                              child: const Row(
+                      Container(
+                        width: MediaQuery.of(context).size.width - 80,
+                        height: MediaQuery.of(context).size.height -
+                            (editing ? 450 : 390),
+                        decoration: BoxDecoration(
+                            border: Border.all(width: 1, color: Colors.grey),
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white),
+                        child: updating
+                            ? Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.cancel,
-                                    color: Colors.red,
-                                  ),
-                                  Text(
-                                    "Huỷ",
-                                    style: TextStyle(color: Colors.red),
-                                  )
+                                  const CircularProgressIndicator(),
+                                  const SizedBox(height: 10),
+                                  Text(updatingInfo)
                                 ],
+                              )
+                            : SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    CardInfo(title: userID, info: user.id!),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    CardInfo(
+                                      title: name,
+                                      info: user.name ?? noInfor,
+                                      func: setName,
+                                      edit: editing,
+                                      initText: user.name,
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    CardInfo(
+                                        title: phoneNumField,
+                                        info: user.phoneNum!),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    CardInfo(
+                                      title: "Email",
+                                      info: user.email ?? noInfor,
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    CardInfo(
+                                      title: city,
+                                      info: user.city ?? noInfor,
+                                      func: setProvince,
+                                      edit: editing,
+                                      initText: user.city,
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    CardInfo(
+                                      title: district,
+                                      info: user.district ?? noInfor,
+                                      func: setDistrict,
+                                      edit: editing,
+                                      initText: user.district,
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    CardInfo(
+                                      title: ward,
+                                      info: user.ward ?? noInfor,
+                                      func: setWard,
+                                      edit: editing,
+                                      initText: user.ward,
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                    CardInfo(
+                                      title: detail,
+                                      info: user.address ?? noInfor,
+                                      func: setAddress,
+                                      edit: editing,
+                                      initText: user.address,
+                                    ),
+                                    const SizedBox(
+                                      height: 20,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          )
-                        : Container(),
-                    const SizedBox(height: 10),
-                  ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width - 40,
+                        decoration: BoxDecoration(
+                          border: Border.all(width: 1, color: Colors.green),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextButton(
+                          onPressed: () async {
+                            if (updating) return;
+                            if (editing) {
+                              setState(() {
+                                updating = true;
+                              });
+                              UpdatingCustomerParams params =
+                                  UpdatingCustomerParams(customerId: user.id!);
+                              UpdatingCustomerPayload payload =
+                                  UpdatingCustomerPayload(
+                                detailAddress: user.address,
+                                district: user.district,
+                                fullname: user.name,
+                                province: user.city,
+                                ward: user.ward,
+                              );
+
+                              var update = await customerOperation.updateInfo(
+                                  params, payload);
+                              print(update);
+                              if (update["error"] != "No error") {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(faildUpdate)),
+                                );
+                              } else {
+                                setState(() {
+                                  user.id = update['data']['id'];
+                                  user.name = update['data']['fullname'];
+                                  user.city = update['data']['province'];
+                                  user.district = update['data']['district'];
+                                  user.ward = update['data']['ward'];
+                                  user.address =
+                                      update['data']['detailAddress'];
+                                  user.email =
+                                      update['data']["account"]['email'];
+                                  user.phoneNum =
+                                      update['data']["account"]['phoneNumber'];
+                                  user.role = update['data']["account"]['role'];
+                                  user.detail = null;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      backgroundColor: Colors.green,
+                                      content: Text(successUpdateInfo)),
+                                );
+                              }
+
+                              setState(() {
+                                updating = false;
+                              });
+                            }
+                            setState(() {
+                              editing = !editing;
+                            });
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.edit,
+                                color: Colors.green,
+                              ),
+                              Text(
+                                editing ? save : edit,
+                                style: const TextStyle(color: Colors.green),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      editing && !updating
+                          ? Container(
+                              width: MediaQuery.of(context).size.width - 40,
+                              decoration: BoxDecoration(
+                                border: Border.all(width: 1, color: Colors.red),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: TextButton(
+                                onPressed: () async {
+                                  setState(() {
+                                    editing = !editing;
+                                  });
+
+                                  var infor = await customerOperation
+                                      .getAuthenticatedCustomerInfo();
+
+                                  setState(() {
+                                    user.id = infor['data']['id'];
+                                    user.name = infor['data']['fullname'];
+                                    user.city = infor['data']['province'];
+                                    user.district = infor['data']['district'];
+                                    user.ward = infor['data']['ward'];
+                                    user.address =
+                                        infor['data']['detailAddress'];
+                                    user.email =
+                                        infor['data']["account"]['email'];
+                                    user.phoneNum =
+                                        infor['data']["account"]['phoneNumber'];
+                                    user.role =
+                                        infor['data']["account"]['role'];
+                                    user.detail = null;
+                                  });
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.cancel,
+                                      color: Colors.red,
+                                    ),
+                                    Text(
+                                      cancel,
+                                      style: TextStyle(color: Colors.red),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            )
+                          : Container(),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            top: 40,
-            right: 20,
-            child: Builder(
-              builder: (context) {
-                return IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.red),
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                );
-              },
+            Positioned(
+              top: 45,
+              right: 20,
+              child: Builder(
+                builder: (context) {
+                  return Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: Colors.white),
+                    child: Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.menu, color: Colors.red),
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              en = !en;
+                            });
+                            print(en);
+                            if (en) {
+                              toEnLanguage();
+                            } else {
+                              toViLanguage();
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.language,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

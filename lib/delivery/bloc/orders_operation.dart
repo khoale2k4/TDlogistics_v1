@@ -130,6 +130,7 @@ class UpdatingOrderInfo {
   double? length;
   double? cod;
   int? statusCode;
+  int? taskId;
 
   UpdatingOrderInfo(
       {this.mass,
@@ -137,7 +138,8 @@ class UpdatingOrderInfo {
       this.width,
       this.length,
       this.cod,
-      this.statusCode});
+      this.statusCode,
+      this.taskId});
 }
 
 class CancelingOrderCondition {
@@ -155,49 +157,22 @@ class UploadingOrderFileCondition {
 
 class CalculatingFeeInfo {
   String provinceSource;
-  String districtSource;
-  String wardSource;
-  String detailSource;
   String provinceDest;
-  String districtDest;
-  String wardDest;
-  String detailDest;
   String serviceType;
-  double length;
-  double width;
-  double height;
   double mass;
 
   CalculatingFeeInfo({
     required this.provinceSource,
-    required this.districtSource,
-    required this.wardSource,
-    required this.detailSource,
     required this.provinceDest,
-    required this.districtDest,
-    required this.wardDest,
-    required this.detailDest,
     required this.serviceType,
-    required this.length,
-    required this.width,
-    required this.height,
     required this.mass,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'provinceSource': provinceSource,
-      'districtSource': districtSource,
-      'wardSource': wardSource,
-      'detailSource': detailSource,
       'provinceDest': provinceDest,
-      'districtDest': districtDest,
-      'wardDest': wardDest,
-      'detailDest': detailDest,
       'serviceType': serviceType,
-      'length': length,
-      'width': width,
-      'height': height,
       'mass': mass,
     };
   }
@@ -244,14 +219,13 @@ class OrdersOperation {
       : baseUrl = 'https://api2.tdlogistics.net.vn/v2/orders',
         dio = Dio();
 
-  Future<Map<String, dynamic>> get(String orderId) async {
+  Future<Map<String, dynamic>> get() async {
     var uri = Uri.parse('$baseUrl/search');
 
     try {
-      print(cookie);
       final response = await http.post(uri,
           headers: {'Content-Type': 'application/json', "Cookie": cookie!},
-          body: jsonEncode({"orderId": orderId}));
+          body: jsonEncode({}));
 
       final decodedResponse = utf8.decode(response.bodyBytes);
       final respon = json.decode(decodedResponse);
@@ -268,6 +242,29 @@ class OrdersOperation {
     }
   }
 
+  Future<Map<String, dynamic>> getRequest() async {
+    var uri = Uri.parse('$baseUrl/requests');
+
+    try {
+      final response = await http.get(uri,
+          headers: {'Content-Type': 'application/json', "Cookie": cookie!});
+
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final respon = json.decode(decodedResponse);
+      if (response.statusCode == 400) {
+        return {"error": true, "message": response.body};
+      }
+      return {
+        "error": false,
+        "data": respon["data"],
+        "message": respon["message"],
+      };
+    } catch (error) {
+      print("error getting requests");
+      return {"error": true, "message": error.toString()};
+    }
+  }
+
   Future<Map<String, dynamic>> calculateFee(CalculatingFeeInfo info) async {
     try {
       final uri = Uri.parse('$baseUrl/calculate_fee');
@@ -276,6 +273,7 @@ class OrdersOperation {
           headers: headers, body: jsonEncode(info.toJson()));
       print(jsonEncode(info));
       final data = json.decode(response.body);
+
       return {
         'error': "No error",
         'data': data['data'],
@@ -284,6 +282,27 @@ class OrdersOperation {
     } catch (e) {
       print('Error calculating fee: $e');
       return {'error': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> acceptOrder(
+      String orderId, String requestId) async {
+    try {
+      final uri = Uri.parse(
+          '$baseUrl/request/accept?orderId=${orderId}&requestId=${requestId}'
+          // 'https://api2.tdlogistics.net.vn/v2/orders/request/accept?orderId=DL_78300_20240721191536012&requestId=9730cf97-540f-4c7c-a784-319cac0a06bf'
+          );
+      final headers = {'Cookie': cookie!};
+      final response = await http.get(uri, headers: headers);
+      print(uri);
+
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final data = json.decode(decodedResponse);
+
+      return data;
+    } catch (e) {
+      print('Error accepting order: $e');
+      return {'error': true, 'message': e.toString()};
     }
   }
 
@@ -297,6 +316,7 @@ class OrdersOperation {
         headers: headers,
         body: jsonEncode(
           {
+            "orderId": condition.orderId,
             "height": info.height,
             "width": info.width,
             "length": info.length,
@@ -305,6 +325,16 @@ class OrdersOperation {
           },
         ),
       );
+      print(jsonEncode(
+          {
+            "orderId": condition.orderId,
+            "height": info.height,
+            "width": info.width,
+            "length": info.length,
+            "mass": info.mass,
+            "cod": info.cod,
+          },
+        ),);
       final decodedResponse = utf8.decode(response.bodyBytes);
       final data = json.decode(decodedResponse);
       print(data);
@@ -361,10 +391,12 @@ class OrdersOperation {
   }
 
   Future<Map<String, dynamic>> updateImages(
-      String orderId, String taskId, UploadImages info) async {
+      String orderId, String taskId, UploadImages info, String type) async {
     var uri = Uri.parse(
-        '$baseUrl/image/update?orderId=${orderId}&taskId=${taskId}&type=receive');
+        '$baseUrl/image/update?orderId=${orderId}&taskId=${taskId}&type=${type}');
     var request = http.MultipartRequest("PUT", uri);
+
+    print(uri);
 
     for (var i = 0; i < info.files.length; i++) {
       var mimeTypeData =
@@ -381,13 +413,10 @@ class OrdersOperation {
     try {
       var streamResponse = await request.send();
       var response = await http.Response.fromStream(streamResponse);
-      if(response.statusCode == 413) {
-        return {
-          'error' : true,
-          'message' : "Reached max size"
-        };
+      if (response.statusCode == 413) {
+        return {'error': true, 'message': "Reached max size"};
       }
-      
+
       final decodedResponse = utf8.decode(response.bodyBytes);
       var data = json.decode(decodedResponse);
       return {'error': data["error"], 'message': data["message"]};
@@ -398,9 +427,9 @@ class OrdersOperation {
   }
 
   Future<Map<String, dynamic>> updateSignature(
-      String orderId, String taskId, UploadSignature info) async {
+      String orderId, String taskId, UploadSignature info, String type) async {
     var uri = Uri.parse(
-        '$baseUrl/signature/update?orderId=$orderId&taskId=$taskId&type=receive');
+        '$baseUrl/signature/update?orderId=$orderId&taskId=$taskId&type=${type}');
     var mimeTypeData =
         lookupMimeType(info.file.path, headerBytes: [0xFF, 0xD8])?.split('/');
     if (mimeTypeData == null || mimeTypeData.length != 2) {
@@ -420,13 +449,10 @@ class OrdersOperation {
     try {
       var streamResponse = await request.send();
       var response = await http.Response.fromStream(streamResponse);
-      if(response.statusCode == 413) {
-        return {
-          'error' : true,
-          'message' : "Reached max size"
-        };
+      if (response.statusCode == 413) {
+        return {'error': true, 'message': "Reached max size"};
       }
-    
+
       final decodedResponse = utf8.decode(response.bodyBytes);
       var data = json.decode(decodedResponse);
 
@@ -435,34 +461,6 @@ class OrdersOperation {
       print("Error updating signature: $error");
       return {'error': error.toString()};
     }
-  }
-}
-
-extension on CreatingOrderByUserInformation {
-  Map<String, dynamic> toJson() {
-    return {
-      'name_sender': nameSender,
-      'name_receiver': nameReceiver,
-      'phone_number_receiver': phoneNumberReceiver,
-      'mass': mass,
-      'height': height,
-      'width': width,
-      'length': length,
-      'province_source': provinceSource,
-      'district_source': districtSource,
-      'ward_source': wardSource,
-      'detail_source': detailSource,
-      'province_dest': provinceDest,
-      'district_dest': districtDest,
-      'ward_dest': wardDest,
-      'detail_dest': detailDest,
-      'long_source': longSource,
-      'lat_source': latSource,
-      'long_destination': longDestination,
-      'lat_destination': latDestination,
-      'COD': cod,
-      'service_type': serviceType
-    };
   }
 }
 
@@ -475,26 +473,6 @@ extension on UpdatingOrderInfo {
       'length': length,
       'COD': cod,
       'statusCode': statusCode
-    };
-  }
-}
-
-extension on CalculatingFeeInfo {
-  Map<String, dynamic> toJson() {
-    return {
-      'provinceSource': provinceSource,
-      'districtSource': districtSource,
-      'wardSource': wardSource,
-      'detailSource': detailSource,
-      'provinceDest': provinceDest,
-      'districtDest': districtDest,
-      'wardDest': wardDest,
-      'detailDest': detailDest,
-      'serviceType': serviceType,
-      'length': length,
-      'width': width,
-      'height': height,
-      'mass': mass
     };
   }
 }

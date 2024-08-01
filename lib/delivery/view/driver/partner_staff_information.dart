@@ -63,12 +63,6 @@ class _PartnerStaffInforState extends State<PartnerStaffInfor> {
                               height: 20,
                             ),
                             CardInfo(
-                                title: "Vị trí",
-                                info: driver.position.toString()),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            CardInfo(
                               title: "Họ và tên",
                               info: driver.fullname ?? "Chưa có thông tin",
                             ),

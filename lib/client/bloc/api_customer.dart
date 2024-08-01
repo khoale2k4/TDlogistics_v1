@@ -18,7 +18,12 @@ class UpdatingCustomerPayload {
   String? ward;
   String? detailAddress;
 
-  UpdatingCustomerPayload({this.fullname, this.province, this.district, this.ward, this.detailAddress});
+  UpdatingCustomerPayload(
+      {this.fullname,
+      this.province,
+      this.district,
+      this.ward,
+      this.detailAddress});
 
   Map<String, dynamic> toJson() {
     return {
@@ -38,7 +43,12 @@ class SearchingCustomerPayload {
   String? ward;
   String? detailAddress;
 
-  SearchingCustomerPayload({this.fullname, this.province, this.district, this.ward, this.detailAddress});
+  SearchingCustomerPayload(
+      {this.fullname,
+      this.province,
+      this.district,
+      this.ward,
+      this.detailAddress});
 
   Map<String, dynamic> toJson() {
     return {
@@ -52,7 +62,8 @@ class SearchingCustomerPayload {
 }
 
 class UpdatingAvatarPayload {
-  File avatar;  // In Dart, typically the file would be handled differently, but for simplicity, we use String.
+  File
+      avatar; // In Dart, typically the file would be handled differently, but for simplicity, we use String.
 
   UpdatingAvatarPayload({required this.avatar});
 }
@@ -69,33 +80,39 @@ class CustomerOperation {
   Future<Map<String, dynamic>> getAuthenticatedCustomerInfo() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/'), 
-        headers: { "Cookie" : cookie!},
-    );
-    final decodedResponse = utf8.decode(response.bodyBytes);
-    final data = json.decode(decodedResponse);
-      return {'error': data['error'], 'message': data['message'], 'data': data['data']};
+        Uri.parse('$baseUrl/'),
+        headers: {"Cookie": cookie!},
+      );
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final data = json.decode(decodedResponse);
+      return {
+        'error': data['error'],
+        'message': data['message'],
+        'data': data['data']
+      };
     } catch (error) {
       print("Error getting authenticated customer info: $error");
       return {'error': error.toString()};
     }
   }
 
-  Future<Map<String, dynamic>> updateInfo(UpdatingCustomerParams params, UpdatingCustomerPayload payload) async {
+  Future<Map<String, dynamic>> updateInfo(
+      UpdatingCustomerParams params, UpdatingCustomerPayload payload) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/update?customerId=${params.customerId}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie' : cookie!
-        },
+        headers: {'Content-Type': 'application/json', 'Cookie': cookie!},
         body: json.encode(payload.toJson()),
       );
       print("Payload: ");
       print(payload.toJson());
-    final decodedResponse = utf8.decode(response.bodyBytes);
-    final data = json.decode(decodedResponse);
-      return {'error': "No error", 'message': data['message'], 'data': data['data']};
+      final decodedResponse = utf8.decode(response.bodyBytes);
+      final data = json.decode(decodedResponse);
+      return {
+        'error': "No error",
+        'message': data['message'],
+        'data': data['data']
+      };
     } catch (error) {
       print("Error updating customer information: $error");
       return {'error': error.toString()};
@@ -110,7 +127,11 @@ class CustomerOperation {
         body: json.encode(payload.toJson()),
       );
       final data = json.decode(response.body);
-      return {'error': data['error'], 'message': data['message'], 'data': data['data']};
+      return {
+        'error': data['error'],
+        'message': data['message'],
+        'data': data['data']
+      };
     } catch (error) {
       print("Error searching customer information: $error");
       return {'error': error.toString()};
@@ -128,7 +149,7 @@ class CustomerOperation {
 
     request.headers['Content-Type'] = "multipart/form-data";
     request.headers['Cookie'] = cookie!;
-    
+
     try {
       var streamResponse = await request.send();
       var response = await http.Response.fromStream(streamResponse);
@@ -145,14 +166,11 @@ class CustomerOperation {
         Uri.parse('$baseUrl/avatar/get?customerId=${params.customerId}'),
         headers: <String, String>{
           'Content-Type': 'application/json',
-          'Cookie' : cookie!,
+          'Cookie': cookie!,
         },
       );
       print(response.body);
-      return {
-        "error" : "No error",
-        "data" : response.bodyBytes
-      };
+      return {"error": "No error", "data": response.bodyBytes};
     } catch (error) {
       print("Error getting avatar: $error");
       return {'error': error.toString()};

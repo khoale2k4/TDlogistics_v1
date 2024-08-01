@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/language.dart';
 import '../view/add order/add_order.dart';
 import '../view/customer_care.dart';
-import '../view/history.dart';
+import '../view/history/history.dart';
 import '../view/login/email_phone.dart';
 import '../view/customer_information.dart';
 import '../models/current.dart';
 import '../view/add order/sender_receiver.dart';
+
+Future<void> logoutCleanEmail() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.remove('email');
+  await prefs.remove('phoneNumber');
+  await prefs.remove('cookie');
+}
 
 class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
@@ -15,13 +24,14 @@ class MyDrawer extends StatefulWidget {
 }
 
 class _MyDrawerState extends State<MyDrawer> {
+
   void logout() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text(
-            'Xác nhận đăng xuất',
+          title: Text(
+            confirmLogout,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
@@ -41,7 +51,7 @@ class _MyDrawerState extends State<MyDrawer> {
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: const Text("Hủy bỏ"),
+                          child: Text(cancel),
                         ),
                       ),
                       Container(
@@ -51,15 +61,16 @@ class _MyDrawerState extends State<MyDrawer> {
                             color: Colors.red),
                         child: TextButton(
                           style: ButtonStyle(),
-                          onPressed: () {
+                          onPressed: () async {
+                            await logoutCleanEmail();
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                   builder: (context) => const LoginUser()),
                             );
                           },
-                          child: const Text(
-                            "Xác nhận",
+                          child: Text(
+                            agree,
                             style: TextStyle(color: Colors.white),
                           ),
                         ),
@@ -100,38 +111,43 @@ class _MyDrawerState extends State<MyDrawer> {
               ),
               UserAccountsDrawerHeader(
                 accountName: Text(
-                  user.name ?? "Chưa có thông tin",
+                  user.name ?? noInfor,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 accountEmail: Text(
-                  user.email ?? "Chưa có thông tin",
+                  user.email ?? noInfor,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 currentAccountPicture: CircleAvatar(
-                    backgroundImage: imageBytes != null
-                        ? MemoryImage(imageBytes!)
-                        : const AssetImage("lib/client/assets/avt.jpg")
-                            as ImageProvider),
+                  backgroundImage: imageBytes != null
+                      ? MemoryImage(imageBytes!)
+                      : const AssetImage("lib/client/assets/avt.jpg")
+                          as ImageProvider,
+                ),
                 decoration: const BoxDecoration(
-                  color: Colors.red,
+                  image: DecorationImage(
+                    fit: BoxFit.fill,
+                    image: AssetImage('lib/client/assets/pro_back.jpg'),
+                  ),
                 ),
               ),
               TextButton(
+                iconAlignment: IconAlignment.start,
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => const Infor()),
                   );
                 },
-                child: const Text(
-                  'Nhấn vào đây để chỉnh sửa thông tin',
+                child: Text(
+                  infomation,
                   style:
                       TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.add_circle, color: Colors.red),
-                title: const Text('Thêm đơn hàng'),
+                title: Text(addOrder),
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
@@ -141,7 +157,7 @@ class _MyDrawerState extends State<MyDrawer> {
               ),
               ListTile(
                 leading: const Icon(Icons.history, color: Colors.red),
-                title: const Text('Lịch sử'),
+                title: Text(history),
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
@@ -151,7 +167,7 @@ class _MyDrawerState extends State<MyDrawer> {
               ),
               ListTile(
                 leading: const Icon(Icons.help, color: Colors.red),
-                title: const Text('Hỗ Trợ'),
+                title: Text(support),
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
@@ -165,7 +181,7 @@ class _MyDrawerState extends State<MyDrawer> {
             children: [
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Đăng xuất'),
+                title: Text(logoutText),
                 onTap: () {
                   logout();
                   clearData();
